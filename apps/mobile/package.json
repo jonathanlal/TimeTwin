@@ -7,15 +7,27 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@timetwin/api-sdk": "workspace:*",
+    "@timetwin/theme": "workspace:*",
+    "@timetwin/ui": "workspace:*",
     "expo": "^51.0.0",
     "expo-router": "^3.5.9",
+    "expo-constants": "^16.0.0",
+    "expo-secure-store": "^13.0.0",
+    "@react-native-async-storage/async-storage": "^1.21.0",
     "react": "^18.2.0",
-    "react-native": "0.75.0"
+    "react-native": "0.75.0",
+    "react-native-safe-area-context": "^4.8.0",
+    "react-native-screens": "^3.29.0"
   },
   "devDependencies": {
-    "eslint": "^9.0.0"
+    "@timetwin/config": "workspace:*",
+    "@types/react": "^18.2.0",
+    "eslint": "^9.0.0",
+    "typescript": "^5.3.3"
   }
 }
