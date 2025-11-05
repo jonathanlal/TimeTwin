@@ -51,9 +51,15 @@ export async function updateProfile(
 ): Promise<ProfileResult> {
   const supabase = getSupabase();
 
+  const updateData: Record<string, unknown> = {
+    ...updates,
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabase
     .from('profiles')
-    .update({ ...updates, updated_at: new Date().toISOString() })
+    // @ts-expect-error - Supabase type inference issue with spreads
+    .update(updateData)
     .eq('id', userId)
     .select()
     .single();
@@ -88,12 +94,14 @@ export async function upsertProfile(profile: {
 }): Promise<ProfileResult> {
   const supabase = getSupabase();
 
+  const upsertData: Record<string, unknown> = {
+    ...profile,
+    updated_at: new Date().toISOString(),
+  };
+
   const { data, error } = await supabase
     .from('profiles')
-    .upsert({
-      ...profile,
-      updated_at: new Date().toISOString(),
-    })
+    .upsert(upsertData as any)
     .select()
     .single();
 

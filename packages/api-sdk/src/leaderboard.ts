@@ -95,14 +95,14 @@ export async function getMyRank(): Promise<{
   // Get all leaderboard entries to calculate rank
   const { data, error } = await supabase
     .from('v_leaderboard_total')
-    .select('user_id, total_captures')
+    .select('*')
     .order('total_captures', { ascending: false });
 
   if (error || !data) {
     return { rank: null, total: null, error };
   }
 
-  const userIndex = data.findIndex((entry) => entry.user_id === user.id);
+  const userIndex = data.findIndex((entry: any) => entry.user_id === user.id);
   const rank = userIndex >= 0 ? userIndex + 1 : null;
 
   return { rank, total: data.length, error: null };
