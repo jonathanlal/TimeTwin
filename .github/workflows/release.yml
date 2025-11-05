@@ -1,0 +1,26 @@
+
+name: Mobile Release
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+jobs:
+  build-submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: EAS login
+        run: npx eas-cli login --token ${{ secrets.EAS_TOKEN }}
+      - name: Build iOS/Android
+        working-directory: apps/mobile
+        run: |
+          npx eas build --platform all --profile production --non-interactive
+      - name: Submit to stores
+        working-directory: apps/mobile
+        env:
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+        run: |
+          npx eas submit --platform ios --latest --non-interactive
+          npx eas submit --platform android --latest --non-interactive

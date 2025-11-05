@@ -1,0 +1,25 @@
+
+name: Expo OTA
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+      - 'turbo.json'
+      - 'pnpm-lock.yaml'
+jobs:
+  ota:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with: { version: 9 }
+      - uses: actions/setup-node@v4
+        with: { node-version: 20, cache: 'pnpm' }
+      - run: pnpm install --frozen-lockfile
+      - name: Login to EAS
+        run: npx eas-cli login --token ${{ secrets.EAS_TOKEN }}
+      - name: Publish OTA to production
+        working-directory: apps/mobile
+        run: npx eas update --branch production --message "ci: OTA $(git rev-parse --short HEAD)"
