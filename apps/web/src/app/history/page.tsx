@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { Timer, User, Trophy, LogOut, Sparkles, Smile, Meh, Brain, Heart, Star, Clock, Search } from 'lucide-react'
+import { Timer, User, Trophy, LogOut, Sparkles, Smile, Meh, Brain, Heart, Star, Clock, Search, TrendingUp } from 'lucide-react'
 import { getMyCaptures, signOut, type Capture, type CaptureMood } from '@timetwin/api-sdk'
 
 const MOOD_OPTIONS: Array<{ value: CaptureMood; label: string; icon: typeof Sparkles; color: string }> = [
@@ -144,6 +144,12 @@ export default function HistoryPage() {
               <Link href="/timer">
                 <Timer className="h-4 w-4 mr-2" />
                 Timer
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/insights">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Insights
               </Link>
             </Button>
             <Button variant="ghost" asChild>
