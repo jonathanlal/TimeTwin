@@ -69,7 +69,7 @@ export default function LoginPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -96,10 +96,12 @@ export default function LoginPage() {
 
         <div className="text-center">
           <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
-            ← Back to home
+            Back to home
           </Link>
         </div>
       </div>
     </div>
   )
 }
+
+
