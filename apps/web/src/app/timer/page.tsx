@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star } from 'lucide-react'
+import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star, History as HistoryIcon } from 'lucide-react'
 
 type CaptureState = 'waiting' | 'capturing' | 'cooldown'
 
@@ -186,6 +186,12 @@ export default function TimerPage() {
             <span className="font-bold text-xl">TimeTwin</span>
           </Link>
           <nav className="flex items-center space-x-4">
+            <Button variant="ghost" asChild>
+              <Link href="/history">
+                <HistoryIcon className="h-4 w-4 mr-2" />
+                History
+              </Link>
+            </Button>
             <Button variant="ghost" asChild>
               <Link href="/leaderboard">
                 <Trophy className="h-4 w-4 mr-2" />

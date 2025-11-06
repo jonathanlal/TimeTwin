@@ -26,6 +26,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="history"
+        options={{
+          title: 'History',
+          tabBarIcon: ({ color, size }) => <TabBarIcon name="history" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="leaderboard"
         options={{
           title: 'Leaderboard',
@@ -49,6 +56,7 @@ export default function TabsLayout() {
 function TabBarIcon({ name, color, size }: { name: string; color: string; size: number }) {
   const icons: Record<string, string> = {
     timer: '⏱️',
+    history: '📝',
     leaderboard: '🏆',
     profile: '👤',
   };

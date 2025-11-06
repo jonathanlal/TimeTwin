@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer, Trophy, Medal, Award, User, LogOut } from 'lucide-react'
+import { Timer, Trophy, Medal, Award, User, LogOut, History as HistoryIcon } from 'lucide-react'
 import { getGlobalLeaderboard, signOut, type LeaderboardEntry } from '@timetwin/api-sdk'
 
 export default function LeaderboardPage() {
@@ -78,6 +78,12 @@ export default function LeaderboardPage() {
                   <Link href="/timer">
                     <Timer className="h-4 w-4 mr-2" />
                     Timer
+                  </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/history">
+                    <HistoryIcon className="h-4 w-4 mr-2" />
+                    History
                   </Link>
                 </Button>
                 <Button variant="ghost" asChild>

@@ -55,22 +55,41 @@ export interface Database {
         Row: {
           id: string;
           user_id: string;
-          captured_at: string;
-          hour_label: string;
-          minute_label: string;
-          created_at: string;
+          server_ts: string;
+          minute_ts: string;
+          label_idx: number;
+          label_str: string;
+          diff_seconds: number;
+          source: string | null;
+          device_model: string | null;
+          app_version: string | null;
+          legacy_id: string | null;
+          note: string | null;
+          mood: string | null;
         };
         Insert: {
           id?: string;
           user_id: string;
-          captured_at?: string;
-          created_at?: string;
+          server_ts?: string;
+          diff_seconds: number;
+          source?: string | null;
+          device_model?: string | null;
+          app_version?: string | null;
+          legacy_id?: string | null;
+          note?: string | null;
+          mood?: string | null;
         };
         Update: {
           id?: string;
           user_id?: string;
-          captured_at?: string;
-          created_at?: string;
+          server_ts?: string;
+          diff_seconds?: number;
+          source?: string | null;
+          device_model?: string | null;
+          app_version?: string | null;
+          legacy_id?: string | null;
+          note?: string | null;
+          mood?: string | null;
         };
       };
       daily_stats: {
