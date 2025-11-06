@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer, User, Trophy, LogOut, History as HistoryIcon, Search as SearchIcon } from 'lucide-react'
+import { Timer, User, Trophy, LogOut, History as HistoryIcon, Search as SearchIcon, TrendingUp } from 'lucide-react'
 import { searchProfiles, signOut, type Profile } from '@timetwin/api-sdk'
 
 export default function SearchPage() {
@@ -89,6 +89,12 @@ export default function SearchPage() {
               <Link href="/history">
                 <HistoryIcon className="h-4 w-4 mr-2" />
                 History
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/insights">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Insights
               </Link>
             </Button>
             <Button variant="ghost" asChild>

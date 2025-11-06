@@ -6,7 +6,7 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer as TimerIcon, User as UserIcon, Trophy, LogOut, History as HistoryIcon, ArrowLeft, Search } from 'lucide-react'
+import { Timer as TimerIcon, User as UserIcon, Trophy, LogOut, History as HistoryIcon, ArrowLeft, Search, TrendingUp } from 'lucide-react'
 import {
   getProfile,
   getUserCaptureCount,
@@ -120,6 +120,12 @@ export default function UserProfilePage() {
               <Link href="/timer">
                 <TimerIcon className="h-4 w-4 mr-2" />
                 Timer
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/insights">
+                <TrendingUp className="h-4 w-4 mr-2" />
+                Insights
               </Link>
             </Button>
             <Button variant="ghost" asChild>
