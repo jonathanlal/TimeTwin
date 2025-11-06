@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star, History as HistoryIcon, Search, TrendingUp } from 'lucide-react'
+import { SaveButton } from '@/components/SaveButton'
 
 const MOOD_OPTIONS: Array<{ value: CaptureMood; label: string; icon: typeof Sparkles; color: string }> = [
   { value: 'excited', label: 'Excited', icon: Sparkles, color: 'text-yellow-500' },
@@ -108,6 +109,12 @@ export default function TimerPage() {
     return { hours, minutes, seconds }
   }
 
+  const isDoubleDigits = () => {
+    const hours = currentTime.getHours().toString().padStart(2, '0')
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0')
+    return hours === minutes
+  }
+
   if (authLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -163,10 +170,7 @@ export default function TimerPage() {
                 Profile
               </Link>
             </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            <SaveButton />
           </nav>
         </div>
       </header>
@@ -247,11 +251,18 @@ export default function TimerPage() {
               <Button
                 size="lg"
                 onClick={handleCapture}
-                disabled={loading}
-                className="w-full text-2xl h-20 bg-green-600 hover:bg-green-700 text-white font-bold"
+                disabled={loading || !isDoubleDigits()}
+                className="w-full text-2xl h-20 bg-green-600 hover:bg-green-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {loading ? 'SAVING...' : 'SAVE'}
               </Button>
+
+              {/* Twin Time Message */}
+              {!isDoubleDigits() && !message && (
+                <p className="text-sm text-center text-muted-foreground">
+                  Button is only available during twin time (when hour equals minute, like 11:11 or 23:23)
+                </p>
+              )}
 
               {/* Status Messages */}
               {message && (
