@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
@@ -10,8 +10,6 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star, History as HistoryIcon, Search, TrendingUp } from 'lucide-react'
-
-type CaptureState = 'waiting' | 'capturing' | 'cooldown'
 
 const MOOD_OPTIONS: Array<{ value: CaptureMood; label: string; icon: typeof Sparkles; color: string }> = [
   { value: 'excited', label: 'Excited', icon: Sparkles, color: 'text-yellow-500' },
@@ -25,16 +23,12 @@ const MOOD_OPTIONS: Array<{ value: CaptureMood; label: string; icon: typeof Spar
 export default function TimerPage() {
   const router = useRouter()
   const { user, loading: authLoading } = useAuth()
-  const [state, setState] = useState<CaptureState>('waiting')
-  const [seconds, setSeconds] = useState(0)
-  const [milliseconds, setMilliseconds] = useState(0)
+  const [currentTime, setCurrentTime] = useState(new Date())
   const [todayCount, setTodayCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [note, setNote] = useState('')
   const [mood, setMood] = useState<CaptureMood | null>(null)
-  const intervalRef = useRef<NodeJS.Timeout | null>(null)
-  const startTimeRef = useRef<number>(0)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -42,6 +36,15 @@ export default function TimerPage() {
       router.push('/login')
     }
   }, [user, authLoading, router])
+
+  // Update current time every second
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+
+    return () => clearInterval(interval)
+  }, [])
 
   // Load today's stats
   useEffect(() => {
@@ -61,38 +64,7 @@ export default function TimerPage() {
     }
   }
 
-  // Timer logic
-  useEffect(() => {
-    if (state === 'capturing') {
-      startTimeRef.current = Date.now()
-
-      intervalRef.current = setInterval(() => {
-        const elapsed = Date.now() - startTimeRef.current
-        setSeconds(Math.floor(elapsed / 1000))
-        setMilliseconds(Math.floor((elapsed % 1000) / 10))
-      }, 10) // Update every 10ms for smooth display
-
-      return () => {
-        if (intervalRef.current) {
-          clearInterval(intervalRef.current)
-        }
-      }
-    } else {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current)
-      }
-    }
-  }, [state])
-
-  const handleStart = () => {
-    setState('capturing')
-    setSeconds(0)
-    setMilliseconds(0)
-    setMessage(null)
-  }
-
-  const handleStop = async () => {
-    setState('cooldown')
+  const handleCapture = async () => {
     setLoading(true)
     setMessage(null)
 
@@ -104,9 +76,6 @@ export default function TimerPage() {
 
       if (error) {
         setMessage({ type: 'error', text: error.message || 'Failed to record capture' })
-        setState('waiting')
-        setSeconds(0)
-        setMilliseconds(0)
         return
       }
 
@@ -116,18 +85,12 @@ export default function TimerPage() {
         setMessage({ type: 'error', text: data?.message || 'Capture recorded' })
       }
 
-      setState('waiting')
-      setSeconds(0)
-      setMilliseconds(0)
       setNote('')
       setMood(null)
       loadTodayStats()
     } catch (error) {
       console.error('Capture error:', error)
       setMessage({ type: 'error', text: 'An unexpected error occurred' })
-      setState('waiting')
-      setSeconds(0)
-      setMilliseconds(0)
     } finally {
       setLoading(false)
     }
@@ -139,26 +102,10 @@ export default function TimerPage() {
   }
 
   const formatTime = () => {
-    const mins = Math.floor(seconds / 60)
-    const secs = seconds % 60
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const formatMilliseconds = () => {
-    return `.${milliseconds.toString().padStart(2, '0')}`
-  }
-
-  const getButtonText = () => {
-    switch (state) {
-      case 'waiting':
-        return 'Start Capture'
-      case 'capturing':
-        return 'Stop & Record'
-      case 'cooldown':
-        return 'Recording...'
-      default:
-        return 'Start'
-    }
+    const hours = currentTime.getHours().toString().padStart(2, '0')
+    const minutes = currentTime.getMinutes().toString().padStart(2, '0')
+    const seconds = currentTime.getSeconds().toString().padStart(2, '0')
+    return { hours, minutes, seconds }
   }
 
   if (authLoading) {
@@ -240,85 +187,73 @@ export default function TimerPage() {
                 </div>
               </div>
 
-              {/* Timer Display */}
+              {/* Current Time Display */}
               <div className="text-center">
-                <div className="text-8xl font-bold tabular-nums tracking-tight">
-                  {formatTime()}
-                  <span className="text-6xl text-muted-foreground">
-                    {formatMilliseconds()}
+                <div className="text-9xl font-bold tabular-nums tracking-tight">
+                  {formatTime().hours}:{formatTime().minutes}
+                  <span className="text-6xl text-muted-foreground/50">
+                    :{formatTime().seconds}
                   </span>
                 </div>
+                <p className="text-sm text-muted-foreground mt-4">
+                  When you see double digits, rush here and hit SAVE!
+                </p>
               </div>
 
               {/* Note & Mood Section */}
-              {state === 'waiting' && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="note" className="text-sm">
-                      Add a note (optional)
-                    </Label>
-                    <Input
-                      id="note"
-                      placeholder="What are you wishing for?"
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      maxLength={200}
-                    />
-                  </div>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="note" className="text-sm">
+                    Add a note (optional)
+                  </Label>
+                  <Input
+                    id="note"
+                    placeholder="What are you wishing for?"
+                    value={note}
+                    onChange={(e) => setNote(e.target.value)}
+                    maxLength={200}
+                  />
+                </div>
 
-                  <div className="space-y-2">
-                    <Label className="text-sm">Tag your vibe (optional)</Label>
-                    <div className="grid grid-cols-3 gap-2">
-                      {MOOD_OPTIONS.map((option) => {
-                        const Icon = option.icon
-                        const isSelected = mood === option.value
-                        return (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setMood(isSelected ? null : option.value)}
-                            className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
-                              isSelected
-                                ? 'border-primary bg-primary/10'
-                                : 'border-border bg-card hover:border-primary/50'
-                            }`}
-                          >
-                            <Icon className={`h-5 w-5 ${isSelected ? 'text-primary' : option.color}`} />
-                            <span className={`text-xs ${isSelected ? 'font-medium' : ''}`}>
-                              {option.label}
-                            </span>
-                          </button>
-                        )
-                      })}
-                    </div>
+                <div className="space-y-2">
+                  <Label className="text-sm">Tag your vibe (optional)</Label>
+                  <div className="grid grid-cols-3 gap-2">
+                    {MOOD_OPTIONS.map((option) => {
+                      const Icon = option.icon
+                      const isSelected = mood === option.value
+                      return (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setMood(isSelected ? null : option.value)}
+                          className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                            isSelected
+                              ? 'border-primary bg-primary/10'
+                              : 'border-border bg-card hover:border-primary/50'
+                          }`}
+                        >
+                          <Icon className={`h-5 w-5 ${isSelected ? 'text-primary' : option.color}`} />
+                          <span className={`text-xs ${isSelected ? 'font-medium' : ''}`}>
+                            {option.label}
+                          </span>
+                        </button>
+                      )
+                    })}
                   </div>
                 </div>
-              )}
+              </div>
 
               {/* Action Button */}
               <Button
                 size="lg"
-                variant={state === 'capturing' ? 'secondary' : 'default'}
-                onClick={state === 'waiting' ? handleStart : handleStop}
-                disabled={loading || state === 'cooldown'}
-                className="w-full text-lg h-14"
+                onClick={handleCapture}
+                disabled={loading}
+                className="w-full text-2xl h-20 bg-green-600 hover:bg-green-700 text-white font-bold"
               >
-                {getButtonText()}
+                {loading ? 'SAVING...' : 'SAVE'}
               </Button>
 
               {/* Status Messages */}
-              {state === 'capturing' && (
-                <p className="text-sm text-muted-foreground text-center">
-                  Timer is running... Press stop when ready
-                </p>
-              )}
-
-              {state === 'waiting' && !message && (
-                <p className="text-sm text-muted-foreground text-center">
-                  Press start to begin tracking time
-                </p>
-              )}
-
               {message && (
                 <div
                   className={`text-sm text-center p-3 rounded-md ${
