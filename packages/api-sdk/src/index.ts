@@ -47,7 +47,12 @@ export {
   getMyCaptureCount,
 } from './captures';
 
-export type { CapturesResult, RecordCaptureResponse } from './captures';
+export type {
+  CapturesResult,
+  RecordCaptureResponse,
+  CaptureMood,
+  RecordCaptureOptions,
+} from './captures';
 
 // Leaderboard & Stats
 export {
