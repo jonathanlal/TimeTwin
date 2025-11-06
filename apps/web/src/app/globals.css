@@ -50,9 +50,14 @@
 }
 
 @layer base {
-body {
+  body {
     background-color: hsl(var(--background));
     color: hsl(var(--foreground));
+  }
+
+  a, a:visited {
+    text-decoration: none;
+    color: inherit;
   }
 }
 
@@ -114,11 +119,3 @@ body {
     animation: tiltGlow 24s ease-in-out infinite;
   }
 }
-
-@layer base {
-  a { text-decoration: none; color: inherit; }
-}
-
-@layer base { a, a:visited { text-decoration: none; color: inherit; } }
-
-
