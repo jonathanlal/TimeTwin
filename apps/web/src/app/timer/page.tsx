@@ -4,12 +4,23 @@ import { useState, useEffect, useRef } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { recordCapture, getTodayStats, signOut } from '@timetwin/api-sdk'
+import { recordCapture, getTodayStats, signOut, type CaptureMood } from '@timetwin/api-sdk'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer as TimerIcon, LogOut, Trophy, User } from 'lucide-react'
+import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star } from 'lucide-react'
 
 type CaptureState = 'waiting' | 'capturing' | 'cooldown'
+
+const MOOD_OPTIONS: Array<{ value: CaptureMood; label: string; icon: typeof Sparkles; color: string }> = [
+  { value: 'excited', label: 'Excited', icon: Sparkles, color: 'text-yellow-500' },
+  { value: 'happy', label: 'Happy', icon: Smile, color: 'text-green-500' },
+  { value: 'neutral', label: 'Neutral', icon: Meh, color: 'text-gray-500' },
+  { value: 'thoughtful', label: 'Thoughtful', icon: Brain, color: 'text-blue-500' },
+  { value: 'grateful', label: 'Grateful', icon: Heart, color: 'text-pink-500' },
+  { value: 'hopeful', label: 'Hopeful', icon: Star, color: 'text-purple-500' },
+]
 
 export default function TimerPage() {
   const router = useRouter()
@@ -20,6 +31,8 @@ export default function TimerPage() {
   const [todayCount, setTodayCount] = useState(0)
   const [loading, setLoading] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
+  const [note, setNote] = useState('')
+  const [mood, setMood] = useState<CaptureMood | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
   const startTimeRef = useRef<number>(0)
 
@@ -84,7 +97,10 @@ export default function TimerPage() {
     setMessage(null)
 
     try {
-      const { data, error } = await recordCapture()
+      const { data, error } = await recordCapture({
+        note: note.trim() || undefined,
+        mood: mood || undefined,
+      })
 
       if (error) {
         setMessage({ type: 'error', text: error.message || 'Failed to record capture' })
@@ -103,6 +119,8 @@ export default function TimerPage() {
       setState('waiting')
       setSeconds(0)
       setMilliseconds(0)
+      setNote('')
+      setMood(null)
       loadTodayStats()
     } catch (error) {
       console.error('Capture error:', error)
@@ -213,6 +231,51 @@ export default function TimerPage() {
                   </span>
                 </div>
               </div>
+
+              {/* Note & Mood Section */}
+              {state === 'waiting' && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="note" className="text-sm">
+                      Add a note (optional)
+                    </Label>
+                    <Input
+                      id="note"
+                      placeholder="What are you wishing for?"
+                      value={note}
+                      onChange={(e) => setNote(e.target.value)}
+                      maxLength={200}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-sm">Tag your vibe (optional)</Label>
+                    <div className="grid grid-cols-3 gap-2">
+                      {MOOD_OPTIONS.map((option) => {
+                        const Icon = option.icon
+                        const isSelected = mood === option.value
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setMood(isSelected ? null : option.value)}
+                            className={`flex flex-col items-center gap-1 p-3 rounded-lg border-2 transition-all ${
+                              isSelected
+                                ? 'border-primary bg-primary/10'
+                                : 'border-border bg-card hover:border-primary/50'
+                            }`}
+                          >
+                            <Icon className={`h-5 w-5 ${isSelected ? 'text-primary' : option.color}`} />
+                            <span className={`text-xs ${isSelected ? 'font-medium' : ''}`}>
+                              {option.label}
+                            </span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
 
               {/* Action Button */}
               <Button
