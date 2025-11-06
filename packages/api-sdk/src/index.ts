@@ -32,6 +32,8 @@ export {
   upsertProfile,
   searchProfiles,
   getProfilesByCountry,
+  getUserStreak,
+  getMyStreak,
 } from './profiles';
 
 export type { ProfileResult, ProfilesResult } from './profiles';
@@ -47,7 +49,12 @@ export {
   getMyCaptureCount,
 } from './captures';
 
-export type { CapturesResult, RecordCaptureResponse } from './captures';
+export type {
+  CapturesResult,
+  RecordCaptureResponse,
+  CaptureMood,
+  RecordCaptureOptions,
+} from './captures';
 
 // Leaderboard & Stats
 export {
@@ -74,3 +81,21 @@ export {
 } from './countries';
 
 export type { CountriesResult, CountryResult } from './countries';
+
+// Analytics
+export {
+  getMyAnalytics,
+  getUserAccuracyStats,
+  getUserTimeDistribution,
+  getUserMoodDistribution,
+  getUserRecentActivity,
+} from './analytics';
+
+export type {
+  AccuracyStats,
+  TimeDistribution,
+  MoodDistribution,
+  RecentActivity,
+  AnalyticsData,
+  AnalyticsResult,
+} from './analytics';

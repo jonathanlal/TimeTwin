@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signUp } from '@timetwin/api-sdk'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -34,12 +35,31 @@ export default function SignupPage() {
 
     setLoading(true)
 
-    // TODO: Implement actual signup logic with @timetwin/api-sdk
-    // For now, this is a placeholder
-    setTimeout(() => {
+    try {
+      // Get user's timezone
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
+      const { data, error: signUpError } = await signUp(
+        email,
+        password,
+        username || undefined,
+        timezone
+      )
+
+      if (signUpError) {
+        setError(signUpError.message || 'Failed to create account')
+        setLoading(false)
+        return
+      }
+
+      if (data?.user) {
+        // Successfully signed up, redirect to timer
+        router.push('/timer')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
       setLoading(false)
-      setError('Signup functionality will be available soon')
-    }, 1000)
+    }
   }
 
   return (

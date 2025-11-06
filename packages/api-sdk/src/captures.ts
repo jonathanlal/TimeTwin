@@ -12,15 +12,26 @@ export interface RecordCaptureResponse {
   error: PostgrestError | Error | null;
 }
 
+export type CaptureMood = 'excited' | 'happy' | 'neutral' | 'thoughtful' | 'grateful' | 'hopeful';
+
+export interface RecordCaptureOptions {
+  note?: string;
+  mood?: CaptureMood;
+}
+
 /**
  * Record a new time capture using the record_capture RPC function
  * This handles validation and updates daily stats automatically
+ * @param options - Optional note and mood to attach to the capture
  */
-export async function recordCapture(): Promise<RecordCaptureResponse> {
+export async function recordCapture(options?: RecordCaptureOptions): Promise<RecordCaptureResponse> {
   const supabase = getSupabase();
 
   try {
-    const { data, error } = await supabase.rpc('record_capture');
+    const { data, error } = await supabase.rpc('record_capture', {
+      p_note: options?.note || null,
+      p_mood: options?.mood || null,
+    });
 
     if (error) {
       return { data: null, error };

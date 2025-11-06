@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import './globals.css'
+import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
   title: 'TimeTwin - Track Your Time',
@@ -13,7 +14,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="font-sans bg-background text-foreground antialiased">{children}</body>
+      <body className="font-sans bg-background text-foreground antialiased">
+        <Providers>{children}</Providers>
+      </body>
     </html>
   )
 }

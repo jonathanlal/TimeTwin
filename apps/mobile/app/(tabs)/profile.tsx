@@ -8,6 +8,7 @@ import {
   getMyProfile,
   updateMyProfile,
   getMyCaptureCount,
+  getMyStreak,
   type Profile,
 } from '@timetwin/api-sdk';
 
@@ -16,6 +17,7 @@ export default function ProfileScreen() {
   const { user, signOut } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [totalCaptures, setTotalCaptures] = useState(0);
+  const [currentStreak, setCurrentStreak] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -28,9 +30,10 @@ export default function ProfileScreen() {
 
   const loadProfile = async () => {
     try {
-      const [profileResult, captureCountResult] = await Promise.all([
+      const [profileResult, captureCountResult, streakResult] = await Promise.all([
         getMyProfile(),
         getMyCaptureCount(),
+        getMyStreak(),
       ]);
 
       if (profileResult.data) {
@@ -41,6 +44,10 @@ export default function ProfileScreen() {
 
       if (captureCountResult.count !== null) {
         setTotalCaptures(captureCountResult.count);
+      }
+
+      if (streakResult.streak !== null) {
+        setCurrentStreak(streakResult.streak);
       }
     } catch (error) {
       console.error('Failed to load profile:', error);
@@ -113,6 +120,14 @@ export default function ProfileScreen() {
               </Text>
               <Text variant="caption" color="secondary" align="center">
                 Total Captures
+              </Text>
+            </View>
+            <View style={styles.statItem}>
+              <Text variant="h3" align="center" style={{ color: theme.colors.primary }}>
+                {currentStreak} 🔥
+              </Text>
+              <Text variant="caption" color="secondary" align="center">
+                Day Streak
               </Text>
             </View>
             <View style={styles.statItem}>
