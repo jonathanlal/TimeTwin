@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { Timer as TimerIcon, LogOut, Trophy, User as UserIcon, History as HistoryIcon, Search, TrendingUp } from 'lucide-react'
+import { SaveButton } from '@/components/SaveButton'
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -166,10 +167,7 @@ export default function ProfilePage() {
                 Leaderboard
               </Link>
             </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
+            <SaveButton />
           </nav>
         </div>
       </header>
@@ -288,6 +286,11 @@ export default function ProfilePage() {
 
                   <Button variant="outline" onClick={() => setEditing(true)} className="w-full">
                     Edit Profile
+                  </Button>
+
+                  <Button variant="destructive" onClick={handleSignOut} className="w-full">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Sign Out
                   </Button>
                 </>
               )}
