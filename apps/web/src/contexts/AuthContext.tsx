@@ -28,6 +28,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!supabaseUrl || !supabaseAnonKey) {
       console.error('Missing Supabase environment variables')
+      console.error('NEXT_PUBLIC_SUPABASE_URL:', supabaseUrl)
+      console.error('NEXT_PUBLIC_SUPABASE_ANON_KEY:', supabaseAnonKey ? '[SET]' : '[MISSING]')
       setLoading(false)
       setInitialized(true)
       return
@@ -38,7 +40,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check current session
     getCurrentUser()
-      .then((currentUser) => {
+      .then(({ user: currentUser }) => {
         setUser(currentUser)
         setLoading(false)
       })
