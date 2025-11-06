@@ -50,11 +50,72 @@
 }
 
 @layer base {
-  * {
-    @apply border-border;
-  }
   body {
-    @apply bg-background text-foreground;
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+  }
+
+  a, a:visited {
+    text-decoration: none;
+    color: inherit;
   }
 }
 
+@layer utilities {
+  .bg-grid-faint {
+    background-image:
+      linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(0deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 120px 120px;
+  }
+
+  .mask-radial-fade {
+    mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1), transparent 70%);
+    -webkit-mask-image: radial-gradient(circle at center, rgba(0, 0, 0, 1), transparent 70%);
+  }
+
+  @keyframes gradientLoop {
+    0% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+    100% {
+      background-position: 0% 50%;
+    }
+  }
+
+  .animate-gradient {
+    background-size: 200% 200%;
+    animation: gradientLoop 18s ease-in-out infinite;
+  }
+
+  @keyframes floatSoft {
+    0%,
+    100% {
+      transform: translateY(0px);
+    }
+    50% {
+      transform: translateY(-12px);
+    }
+  }
+
+  .animate-float-soft {
+    animation: floatSoft 8s ease-in-out infinite;
+  }
+
+  @keyframes tiltGlow {
+    0%,
+    100% {
+      transform: rotate(-1deg);
+    }
+    50% {
+      transform: rotate(1deg);
+    }
+  }
+
+  .animate-tilt-glow {
+    animation: tiltGlow 24s ease-in-out infinite;
+  }
+}

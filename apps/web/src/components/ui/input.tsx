@@ -6,19 +6,18 @@ export interface InputProps
   extends React.InputHTMLAttributes<HTMLInputElement> {}
 
 const Input = React.forwardRef<HTMLInputElement, InputProps>(
-  ({ className, type, ...props }, ref) => {
-    return (
-      <input
-        type={type}
-        className={cn(
-          'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
-          className
-        )}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
+  ({ className, type = 'text', ...props }, ref) => (
+    <input
+      ref={ref}
+      type={type}
+      className={cn(
+        'flex h-11 w-full rounded-2xl border border-slate-800 bg-slate-900/50 px-4 text-sm text-slate-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 focus:ring-offset-slate-950 placeholder:text-slate-500 disabled:cursor-not-allowed disabled:opacity-60',
+        'file:border-0 file:bg-transparent file:text-sm file:font-medium',
+        className,
+      )}
+      {...props}
+    />
+  ),
 )
 Input.displayName = 'Input'
 

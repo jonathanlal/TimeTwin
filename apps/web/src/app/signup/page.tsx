@@ -93,7 +93,7 @@ export default function SignupPage() {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="********"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
@@ -105,7 +105,7 @@ export default function SignupPage() {
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="••••••••"
+                  placeholder="********"
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
@@ -132,10 +132,11 @@ export default function SignupPage() {
 
         <div className="text-center">
           <Link href="/" className="text-sm text-muted-foreground hover:text-primary">
-            ← Back to home
+            Back to home
           </Link>
         </div>
       </div>
     </div>
   )
 }
+
