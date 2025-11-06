@@ -81,3 +81,21 @@ export {
 } from './countries';
 
 export type { CountriesResult, CountryResult } from './countries';
+
+// Analytics
+export {
+  getMyAnalytics,
+  getUserAccuracyStats,
+  getUserTimeDistribution,
+  getUserMoodDistribution,
+  getUserRecentActivity,
+} from './analytics';
+
+export type {
+  AccuracyStats,
+  TimeDistribution,
+  MoodDistribution,
+  RecentActivity,
+  AnalyticsData,
+  AnalyticsResult,
+} from './analytics';

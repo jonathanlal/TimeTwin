@@ -33,6 +33,13 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="insights"
+        options={{
+          title: 'Insights',
+          tabBarIcon: ({ color, size }) => <TabBarIcon name="insights" color={color} size={size} />,
+        }}
+      />
+      <Tabs.Screen
         name="search"
         options={{
           title: 'Search',
@@ -64,6 +71,7 @@ function TabBarIcon({ name, color, size }: { name: string; color: string; size: 
   const icons: Record<string, string> = {
     timer: '⏱️',
     history: '📝',
+    insights: '📊',
     search: '🔍',
     leaderboard: '🏆',
     profile: '👤',
