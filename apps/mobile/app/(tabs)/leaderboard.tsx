@@ -1,26 +1,46 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
 import { Container, Text, Card, Loading } from '@timetwin/ui';
 import { useTheme } from '@timetwin/theme';
-import { getGlobalLeaderboard, getMyRank, type LeaderboardEntry } from '@timetwin/api-sdk';
+import { getGlobalLeaderboard, getCountryLeaderboard, getAllCountries, getMyRank, type LeaderboardEntry, type Country } from '@timetwin/api-sdk';
 
 export default function LeaderboardScreen() {
   const { theme } = useTheme();
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [countries, setCountries] = useState<Country[]>([]);
+  const [selectedCountry, setSelectedCountry] = useState<string>('all');
   const [myRank, setMyRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
+    loadCountries();
     loadLeaderboard();
   }, []);
 
+  useEffect(() => {
+    loadLeaderboard();
+  }, [selectedCountry]);
+
+  const loadCountries = async () => {
+    try {
+      const { data } = await getAllCountries();
+      if (data) {
+        setCountries(data);
+      }
+    } catch {
+      // Silently fail - countries are optional
+    }
+  };
+
   const loadLeaderboard = async () => {
     try {
-      const [leaderboardResult, rankResult] = await Promise.all([
-        getGlobalLeaderboard({ limit: 50 }),
-        getMyRank(),
-      ]);
+      setLoading(true);
+      const leaderboardResult = selectedCountry === 'all'
+        ? await getGlobalLeaderboard({ limit: 50 })
+        : await getCountryLeaderboard(selectedCountry, { limit: 50 });
+
+      const rankResult = await getMyRank();
 
       if (leaderboardResult.data) {
         setLeaderboard(leaderboardResult.data);
@@ -29,8 +49,8 @@ export default function LeaderboardScreen() {
       if (rankResult.rank !== null) {
         setMyRank(rankResult.rank);
       }
-    } catch (error) {
-      console.error('Failed to load leaderboard:', error);
+    } catch {
+      // Error silently handled
     } finally {
       setLoading(false);
       setRefreshing(false);
@@ -52,7 +72,7 @@ export default function LeaderboardScreen() {
         contentContainerStyle={{ padding: theme.spacing[4] }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        <View style={[styles.header, { marginBottom: theme.spacing[6] }]}>
+        <View style={[styles.header, { marginBottom: theme.spacing[4] }]}>
           <Text variant="h2" align="center">
             Leaderboard
           </Text>
@@ -62,6 +82,52 @@ export default function LeaderboardScreen() {
             </Text>
           )}
         </View>
+
+        {/* Country Filter */}
+        <Card variant="outlined" padding={4} style={{ marginBottom: theme.spacing[4] }}>
+          <Text variant="label" style={{ marginBottom: theme.spacing[2] }}>
+            Filter by country:
+          </Text>
+          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[2] }}>
+            <TouchableOpacity
+              onPress={() => setSelectedCountry('all')}
+              style={[
+                styles.countryButton,
+                {
+                  backgroundColor: selectedCountry === 'all' ? theme.colors.primary : theme.colors.cardBackground,
+                  borderColor: selectedCountry === 'all' ? theme.colors.primary : theme.colors.border,
+                }
+              ]}
+            >
+              <Text
+                variant="bodySmall"
+                style={{ color: selectedCountry === 'all' ? '#fff' : theme.colors.text }}
+              >
+                All Countries
+              </Text>
+            </TouchableOpacity>
+            {countries.map((country) => (
+              <TouchableOpacity
+                key={country.code}
+                onPress={() => setSelectedCountry(country.code)}
+                style={[
+                  styles.countryButton,
+                  {
+                    backgroundColor: selectedCountry === country.code ? theme.colors.primary : theme.colors.cardBackground,
+                    borderColor: selectedCountry === country.code ? theme.colors.primary : theme.colors.border,
+                  }
+                ]}
+              >
+                <Text
+                  variant="bodySmall"
+                  style={{ color: selectedCountry === country.code ? '#fff' : theme.colors.text }}
+                >
+                  {country.name}
+                </Text>
+              </TouchableOpacity>
+            ))}
+          </View>
+        </Card>
 
         {leaderboard.length === 0 ? (
           <Card variant="outlined" padding={8}>
@@ -147,6 +213,12 @@ const styles = StyleSheet.create({
   },
   list: {
     width: '100%',
+  },
+  countryButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderRadius: 8,
+    borderWidth: 1,
   },
   leaderboardItem: {
     flexDirection: 'row',

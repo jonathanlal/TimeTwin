@@ -7,34 +7,55 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Timer, Trophy, Medal, Award, User, LogOut, History as HistoryIcon } from 'lucide-react'
-import { getGlobalLeaderboard, signOut, type LeaderboardEntry } from '@timetwin/api-sdk'
+import { getGlobalLeaderboard, getCountryLeaderboard, getAllCountries, signOut, type LeaderboardEntry, type Country } from '@timetwin/api-sdk'
 
 export default function LeaderboardPage() {
   const router = useRouter()
   const { user, initialized } = useAuth()
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
+  const [countries, setCountries] = useState<Country[]>([])
+  const [selectedCountry, setSelectedCountry] = useState<string>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (initialized) {
+      loadCountries()
       loadLeaderboard()
     }
   }, [initialized])
 
+  useEffect(() => {
+    loadLeaderboard()
+  }, [selectedCountry])
+
+  const loadCountries = async () => {
+    try {
+      const { data } = await getAllCountries()
+      if (data) {
+        setCountries(data)
+      }
+    } catch {
+      // Silently fail - countries are optional
+    }
+  }
+
   const loadLeaderboard = async () => {
     try {
-      const { data, error } = await getGlobalLeaderboard({ limit: 50 })
+      setLoading(true)
+      const result = selectedCountry === 'all'
+        ? await getGlobalLeaderboard({ limit: 50 })
+        : await getCountryLeaderboard(selectedCountry, { limit: 50 })
 
-      if (error) {
-        setError(error.message)
+      if (result.error) {
+        setError(result.error.message)
         return
       }
 
-      if (data) {
-        setLeaderboard(data)
+      if (result.data) {
+        setLeaderboard(result.data)
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load leaderboard')
     } finally {
       setLoading(false)
@@ -114,12 +135,38 @@ export default function LeaderboardPage() {
       {/* Main Content */}
       <main className="flex-1 container mx-auto px-4 py-12">
         <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-12">
+          <div className="text-center mb-8">
             <h2 className="text-4xl font-bold mb-4">Global Leaderboard</h2>
             <p className="text-muted-foreground">
               Top performers worldwide ranked by total captures
             </p>
           </div>
+
+          {/* Country Filter */}
+          <Card className="mb-8">
+            <CardContent className="py-4">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-sm font-medium mr-2">Filter by country:</span>
+                <Button
+                  size="sm"
+                  variant={selectedCountry === 'all' ? 'default' : 'outline'}
+                  onClick={() => setSelectedCountry('all')}
+                >
+                  All Countries
+                </Button>
+                {countries.map((country) => (
+                  <Button
+                    key={country.code}
+                    size="sm"
+                    variant={selectedCountry === country.code ? 'default' : 'outline'}
+                    onClick={() => setSelectedCountry(country.code)}
+                  >
+                    {country.name}
+                  </Button>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
           {error ? (
             <Card>
