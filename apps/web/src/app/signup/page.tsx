@@ -39,12 +39,12 @@ export default function SignupPage() {
       // Get user's timezone
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
 
-      const { data, error: signUpError } = await signUp(
+      const { user, error: signUpError } = await signUp({
         email,
         password,
-        username || undefined,
-        timezone
-      )
+        username: username || undefined,
+        timezone,
+      })
 
       if (signUpError) {
         setError(signUpError.message || 'Failed to create account')
@@ -52,11 +52,12 @@ export default function SignupPage() {
         return
       }
 
-      if (data?.user) {
+      if (user) {
         // Successfully signed up, redirect to timer
         router.push('/timer')
       }
     } catch (err) {
+      console.error('Signup error:', err)
       setError('An unexpected error occurred')
       setLoading(false)
     }

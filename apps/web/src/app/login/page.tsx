@@ -23,7 +23,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { data, error: signInError } = await signIn(email, password)
+      const { user, error: signInError } = await signIn({ email, password })
 
       if (signInError) {
         setError(signInError.message || 'Failed to sign in')
@@ -31,11 +31,12 @@ export default function LoginPage() {
         return
       }
 
-      if (data?.user) {
+      if (user) {
         // Successfully signed in, redirect to timer
         router.push('/timer')
       }
     } catch (err) {
+      console.error('Sign in error:', err)
       setError('An unexpected error occurred')
       setLoading(false)
     }
