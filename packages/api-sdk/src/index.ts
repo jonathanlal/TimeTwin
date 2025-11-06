@@ -32,6 +32,8 @@ export {
   upsertProfile,
   searchProfiles,
   getProfilesByCountry,
+  getUserStreak,
+  getMyStreak,
 } from './profiles';
 
 export type { ProfileResult, ProfilesResult } from './profiles';

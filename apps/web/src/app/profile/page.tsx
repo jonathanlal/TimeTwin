@@ -8,6 +8,7 @@ import {
   getMyProfile,
   updateMyProfile,
   getMyCaptureCount,
+  getMyStreak,
   signOut,
   type Profile,
 } from '@timetwin/api-sdk'
@@ -22,6 +23,7 @@ export default function ProfilePage() {
   const { user, loading: authLoading } = useAuth()
   const [profile, setProfile] = useState<Profile | null>(null)
   const [totalCaptures, setTotalCaptures] = useState(0)
+  const [currentStreak, setCurrentStreak] = useState(0)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -44,9 +46,10 @@ export default function ProfilePage() {
 
   const loadProfile = async () => {
     try {
-      const [profileResult, captureCountResult] = await Promise.all([
+      const [profileResult, captureCountResult, streakResult] = await Promise.all([
         getMyProfile(),
         getMyCaptureCount(),
+        getMyStreak(),
       ])
 
       if (profileResult.data) {
@@ -57,6 +60,10 @@ export default function ProfilePage() {
 
       if (captureCountResult.count !== null) {
         setTotalCaptures(captureCountResult.count)
+      }
+
+      if (streakResult.streak !== null) {
+        setCurrentStreak(streakResult.streak)
       }
     } catch (error) {
       console.error('Failed to load profile:', error)
@@ -169,10 +176,14 @@ export default function ProfilePage() {
               <CardTitle>Statistics</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-2 gap-8">
+              <div className="grid grid-cols-3 gap-8">
                 <div className="text-center">
                   <p className="text-4xl font-bold">{totalCaptures}</p>
                   <p className="text-sm text-muted-foreground mt-1">Total Captures</p>
+                </div>
+                <div className="text-center">
+                  <p className="text-4xl font-bold text-primary">{currentStreak} 🔥</p>
+                  <p className="text-sm text-muted-foreground mt-1">Day Streak</p>
                 </div>
                 <div className="text-center">
                   <p className="text-2xl font-semibold">{profile?.timezone || 'Unknown'}</p>

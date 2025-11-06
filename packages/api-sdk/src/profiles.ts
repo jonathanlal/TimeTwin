@@ -145,3 +145,55 @@ export async function getProfilesByCountry(
 
   return { data, error };
 }
+
+/**
+ * Get a user's current capture streak (consecutive days with captures)
+ */
+export async function getUserStreak(userId: string): Promise<{
+  streak: number | null;
+  error: PostgrestError | Error | null;
+}> {
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase.rpc('get_user_streak', {
+      p_user_id: userId,
+    });
+
+    if (error) {
+      return { streak: null, error };
+    }
+
+    return { streak: data as number, error: null };
+  } catch (err) {
+    return {
+      streak: null,
+      error: err instanceof Error ? err : new Error('Unknown error getting streak'),
+    };
+  }
+}
+
+/**
+ * Get the current user's capture streak
+ */
+export async function getMyStreak(): Promise<{
+  streak: number | null;
+  error: PostgrestError | Error | null;
+}> {
+  const supabase = getSupabase();
+
+  try {
+    const { data, error } = await supabase.rpc('get_my_streak');
+
+    if (error) {
+      return { streak: null, error };
+    }
+
+    return { streak: data as number, error: null };
+  } catch (err) {
+    return {
+      streak: null,
+      error: err instanceof Error ? err : new Error('Unknown error getting streak'),
+    };
+  }
+}
