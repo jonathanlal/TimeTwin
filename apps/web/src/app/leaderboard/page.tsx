@@ -1,35 +1,26 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer, Trophy, Medal, Award } from 'lucide-react'
-import { initSupabase, getGlobalLeaderboard, type LeaderboardEntry } from '@timetwin/api-sdk'
+import { Timer, Trophy, Medal, Award, User, LogOut } from 'lucide-react'
+import { getGlobalLeaderboard, signOut, type LeaderboardEntry } from '@timetwin/api-sdk'
 
 export default function LeaderboardPage() {
+  const router = useRouter()
+  const { user, initialized } = useAuth()
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-    if (!supabaseUrl || !supabaseAnonKey) {
-      setError('Supabase configuration is missing')
-      setLoading(false)
-      return
-    }
-
-    try {
-      initSupabase(supabaseUrl, supabaseAnonKey)
+    if (initialized) {
       loadLeaderboard()
-    } catch (err) {
-      setError('Failed to initialize')
-      setLoading(false)
     }
-  }, [])
+  }, [initialized])
 
   const loadLeaderboard = async () => {
     try {
@@ -50,6 +41,11 @@ export default function LeaderboardPage() {
     }
   }
 
+  const handleSignOut = async () => {
+    await signOut()
+    router.push('/')
+  }
+
   const getRankIcon = (index: number) => {
     switch (index) {
       case 0:
@@ -66,7 +62,7 @@ export default function LeaderboardPage() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
-      <header className="border-b">
+      <header className="border-b border-border bg-card">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <Link href="/" className="flex items-center space-x-2">
             <Timer className="h-6 w-6" />
@@ -76,9 +72,35 @@ export default function LeaderboardPage() {
             <Button variant="ghost" asChild>
               <Link href="/">Home</Link>
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/login">Login</Link>
-            </Button>
+            {user ? (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/timer">
+                    <Timer className="h-4 w-4 mr-2" />
+                    Timer
+                  </Link>
+                </Button>
+                <Button variant="ghost" asChild>
+                  <Link href="/profile">
+                    <User className="h-4 w-4 mr-2" />
+                    Profile
+                  </Link>
+                </Button>
+                <Button variant="outline" onClick={handleSignOut}>
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign Out
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button variant="ghost" asChild>
+                  <Link href="/login">Sign In</Link>
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link href="/signup">Sign Up</Link>
+                </Button>
+              </>
+            )}
           </nav>
         </div>
       </header>

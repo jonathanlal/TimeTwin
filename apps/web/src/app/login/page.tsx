@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { signIn } from '@timetwin/api-sdk'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -21,12 +22,23 @@ export default function LoginPage() {
     setError(null)
     setLoading(true)
 
-    // TODO: Implement actual login logic with @timetwin/api-sdk
-    // For now, this is a placeholder
-    setTimeout(() => {
+    try {
+      const { data, error: signInError } = await signIn(email, password)
+
+      if (signInError) {
+        setError(signInError.message || 'Failed to sign in')
+        setLoading(false)
+        return
+      }
+
+      if (data?.user) {
+        // Successfully signed in, redirect to timer
+        router.push('/timer')
+      }
+    } catch (err) {
+      setError('An unexpected error occurred')
       setLoading(false)
-      setError('Login functionality will be available soon')
-    }, 1000)
+    }
   }
 
   return (
