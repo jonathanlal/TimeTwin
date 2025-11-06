@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star, History as HistoryIcon } from 'lucide-react'
+import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star, History as HistoryIcon, Search } from 'lucide-react'
 
 type CaptureState = 'waiting' | 'capturing' | 'cooldown'
 
@@ -190,6 +190,12 @@ export default function TimerPage() {
               <Link href="/history">
                 <HistoryIcon className="h-4 w-4 mr-2" />
                 History
+              </Link>
+            </Button>
+            <Button variant="ghost" asChild>
+              <Link href="/search">
+                <Search className="h-4 w-4 mr-2" />
+                Search
               </Link>
             </Button>
             <Button variant="ghost" asChild>
