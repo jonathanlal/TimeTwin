@@ -97,6 +97,9 @@ importers:
         specifier: ^2.5.0
         version: 2.6.0
     devDependencies:
+      '@eslint/eslintrc':
+        specifier: ^3.2.0
+        version: 3.3.1
       '@timetwin/config':
         specifier: workspace:*
         version: link:../../packages/config
@@ -140,6 +143,9 @@ importers:
       '@types/node':
         specifier: ^20.0.0
         version: 20.19.24
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.1(jiti@2.6.1)
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
@@ -158,6 +164,9 @@ importers:
       '@types/react':
         specifier: ^18.2.0
         version: 18.3.26
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.1(jiti@2.6.1)
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
@@ -183,6 +192,9 @@ importers:
       '@types/react-native':
         specifier: ^0.72.0
         version: 0.72.8(react-native@0.75.0(@babel/core@7.28.5)(@babel/preset-env@7.28.5(@babel/core@7.28.5))(@types/react@18.3.26)(react@18.3.1)(typescript@5.9.3))
+      eslint:
+        specifier: ^9.0.0
+        version: 9.39.1(jiti@2.6.1)
       typescript:
         specifier: ^5.3.3
         version: 5.9.3
