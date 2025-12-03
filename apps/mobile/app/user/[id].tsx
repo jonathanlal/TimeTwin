@@ -159,7 +159,7 @@ export default function UserProfileScreen() {
           <Text variant="body" style={{ color: theme.colors.textSecondary }}>
             {error}
           </Text>
-          <Button title="Go Back" onPress={() => router.back()} variant="primary" />
+          <Button onPress={() => router.back()} variant="primary">Go Back</Button>
         </View>
       </View>
     );

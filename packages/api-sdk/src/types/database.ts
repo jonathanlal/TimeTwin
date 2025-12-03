@@ -25,30 +25,42 @@ export interface Database {
       profiles: {
         Row: {
           id: string;
+          user_id: string;
           username: string | null;
           country_code: string | null;
           timezone: string;
           is_public: boolean;
+          privacy: string;
+          capture_panel_mode: 'expanded' | 'collapsed' | 'hidden';
           created_at: string;
           updated_at: string;
+          avatar_url: string | null;
         };
         Insert: {
-          id: string;
+          id?: string;
+          user_id: string;
           username?: string | null;
           country_code?: string | null;
           timezone?: string;
           is_public?: boolean;
+          privacy?: string;
+          capture_panel_mode?: 'expanded' | 'collapsed' | 'hidden';
           created_at?: string;
           updated_at?: string;
+          avatar_url?: string | null;
         };
         Update: {
           id?: string;
+          user_id?: string;
           username?: string | null;
           country_code?: string | null;
           timezone?: string;
           is_public?: boolean;
+          privacy?: string;
+          capture_panel_mode?: 'expanded' | 'collapsed' | 'hidden';
           created_at?: string;
           updated_at?: string;
+          avatar_url?: string | null;
         };
       };
       captures: {
@@ -136,12 +148,29 @@ export interface Database {
     };
     Functions: {
       record_capture: {
-        Args: Record<string, never>;
+        Args: {
+          p_note?: string | null;
+          p_mood?: string | null;
+        };
         Returns: {
           success: boolean;
           message: string;
           capture_id: string | null;
         };
+      };
+      get_user_streak: {
+        Args: {
+          p_user_id: string;
+        };
+        Returns: number;
+      };
+      get_my_streak: {
+        Args: Record<string, never>;
+        Returns: number;
+      };
+      is_twin_time: {
+        Args: Record<string, never>;
+        Returns: boolean;
       };
     };
     Enums: Record<string, never>;

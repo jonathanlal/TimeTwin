@@ -2,6 +2,7 @@
   "name": "@timetwin/ui",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "scripts": {
@@ -9,14 +10,15 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@timetwin/theme": "workspace:*",
-    "react": "^18.2.0",
-    "react-native": "^0.75.0"
+    "@timetwin/theme": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*"
   },
   "devDependencies": {
     "@timetwin/config": "workspace:*",
-    "@types/react": "^18.2.0",
-    "@types/react-native": "^0.72.0",
+    "@types/react": "^19.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "eslint": "^9.0.0",

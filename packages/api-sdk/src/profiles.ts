@@ -12,6 +12,23 @@ export interface ProfilesResult {
   error: PostgrestError | null;
 }
 
+export interface StreakResult {
+  streak: number | null;
+  error: PostgrestError | null;
+}
+
+const PROFILE_SELECT =
+  'user_id, username, country_code, timezone, is_public, privacy, capture_panel_mode, created_at, updated_at, avatar_url';
+
+const normalizeProfile = (row: any): Profile | null => {
+  if (!row) return null;
+  const userId = row.user_id ?? row.id;
+  return { ...row, id: userId } as Profile;
+};
+
+const normalizeProfiles = (rows: any[] | null): Profile[] | null =>
+  rows ? rows.map((row) => normalizeProfile(row)!).filter(Boolean) : rows;
+
 /**
  * Get a user's profile by user ID
  */
@@ -20,11 +37,11 @@ export async function getProfile(userId: string): Promise<ProfileResult> {
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
-    .eq('id', userId)
-    .single();
+    .select(PROFILE_SELECT)
+    .eq('user_id', userId)
+    .maybeSingle();
 
-  return { data, error };
+  return { data: normalizeProfile(data), error };
 }
 
 /**
@@ -33,38 +50,72 @@ export async function getProfile(userId: string): Promise<ProfileResult> {
 export async function getMyProfile(): Promise<ProfileResult> {
   const supabase = getSupabase();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: { message: 'Not authenticated', code: 'UNAUTHORIZED', details: '', hint: '' } as PostgrestError };
+    return {
+      data: null,
+      error: { message: 'Not authenticated', code: 'UNAUTHORIZED', details: '', hint: '' } as PostgrestError,
+    };
   }
 
   return getProfile(user.id);
 }
 
 /**
- * Update a user's profile
+ * Update a user's profile (creates a row if it doesn't exist)
  */
 export async function updateProfile(
   userId: string,
-  updates: ProfileUpdate
+  updates: ProfileUpdate,
 ): Promise<ProfileResult> {
   const supabase = getSupabase();
 
-  const updateData: Record<string, unknown> = {
-    ...updates,
+  const { data: existing } = await supabase
+    .from('profiles')
+    .select(PROFILE_SELECT)
+    .eq('user_id', userId)
+    .maybeSingle();
+
+  const payload = {
+    user_id: userId,
+    username: existing?.username ?? null,
+    country_code: existing?.country_code ?? null,
+    timezone: existing?.timezone ?? 'UTC',
+    is_public: typeof updates.is_public === 'boolean' ? updates.is_public : existing?.is_public ?? true,
+    privacy:
+      typeof updates.is_public === 'boolean'
+        ? updates.is_public
+          ? 'public'
+          : 'private'
+        : existing?.privacy ?? 'public',
+    capture_panel_mode: (updates.capture_panel_mode ?? existing?.capture_panel_mode ?? 'expanded') as
+      | 'expanded'
+      | 'collapsed'
+      | 'hidden',
+    avatar_url: existing?.avatar_url ?? null,
+    created_at: existing?.created_at ?? new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    ...updates,
   };
 
   const { data, error } = await supabase
     .from('profiles')
-    // @ts-expect-error - Supabase type inference issue with spreads
-    .update(updateData)
-    .eq('id', userId)
-    .select()
-    .single();
+    .upsert(payload, { onConflict: 'user_id' })
+    .select(PROFILE_SELECT)
+    .maybeSingle();
 
-  return { data, error };
+  if (error) {
+    return { data: null, error };
+  }
+
+  if (!data) {
+    return getProfile(userId);
+  }
+
+  return { data: normalizeProfile(data), error: null };
 }
 
 /**
@@ -73,10 +124,15 @@ export async function updateProfile(
 export async function updateMyProfile(updates: ProfileUpdate): Promise<ProfileResult> {
   const supabase = getSupabase();
 
-  const { data: { user } } = await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
 
   if (!user) {
-    return { data: null, error: { message: 'Not authenticated', code: 'UNAUTHORIZED', details: '', hint: '' } as PostgrestError };
+    return {
+      data: null,
+      error: { message: 'Not authenticated', code: 'UNAUTHORIZED', details: '', hint: '' } as PostgrestError,
+    };
   }
 
   return updateProfile(user.id, updates);
@@ -91,21 +147,61 @@ export async function upsertProfile(profile: {
   country_code?: string | null;
   timezone?: string;
   is_public?: boolean;
+  capture_panel_mode?: 'expanded' | 'collapsed' | 'hidden';
 }): Promise<ProfileResult> {
   const supabase = getSupabase();
 
-  const upsertData: Record<string, unknown> = {
-    ...profile,
+  const payload = {
+    user_id: profile.id,
+    username: profile.username ?? null,
+    country_code: profile.country_code ?? null,
+    timezone: profile.timezone ?? 'UTC',
+    is_public: profile.is_public ?? true,
+    privacy: (profile.is_public ?? true) ? 'public' : 'private',
+    capture_panel_mode: profile.capture_panel_mode ?? 'expanded',
     updated_at: new Date().toISOString(),
   };
 
   const { data, error } = await supabase
     .from('profiles')
-    .upsert(upsertData as any)
-    .select()
+    .upsert(payload, { onConflict: 'user_id' })
+    .select(PROFILE_SELECT)
     .single();
 
-  return { data, error };
+  return { data: normalizeProfile(data), error };
+}
+
+/**
+ * Get streak count for a specific user
+ */
+export async function getUserStreak(userId: string): Promise<StreakResult> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase.rpc('get_user_streak', {
+    p_user_id: userId,
+  });
+
+  return { streak: (data as number | null) ?? null, error };
+}
+
+/**
+ * Get the current user's streak
+ */
+export async function getMyStreak(): Promise<StreakResult> {
+  const supabase = getSupabase();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return {
+      streak: null,
+      error: { message: 'Not authenticated', code: 'UNAUTHORIZED', details: '', hint: '' } as PostgrestError,
+    };
+  }
+
+  return getUserStreak(user.id);
 }
 
 /**
@@ -113,18 +209,19 @@ export async function upsertProfile(profile: {
  */
 export async function searchProfiles(
   query: string,
-  limit: number = 20
+  limit: number = 20,
 ): Promise<ProfilesResult> {
   const supabase = getSupabase();
+  const searchTerm = `%${query.trim()}%`;
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(PROFILE_SELECT)
     .eq('is_public', true)
-    .ilike('username', `%${query}%`)
+    .ilike('username', searchTerm)
     .limit(limit);
 
-  return { data, error };
+  return { data: normalizeProfiles(data), error };
 }
 
 /**
@@ -132,68 +229,16 @@ export async function searchProfiles(
  */
 export async function getProfilesByCountry(
   countryCode: string,
-  limit: number = 50
+  limit: number = 50,
 ): Promise<ProfilesResult> {
   const supabase = getSupabase();
 
   const { data, error } = await supabase
     .from('profiles')
-    .select('*')
+    .select(PROFILE_SELECT)
     .eq('is_public', true)
     .eq('country_code', countryCode)
     .limit(limit);
 
-  return { data, error };
-}
-
-/**
- * Get a user's current capture streak (consecutive days with captures)
- */
-export async function getUserStreak(userId: string): Promise<{
-  streak: number | null;
-  error: PostgrestError | Error | null;
-}> {
-  const supabase = getSupabase();
-
-  try {
-    const { data, error } = await supabase.rpc('get_user_streak', {
-      p_user_id: userId,
-    });
-
-    if (error) {
-      return { streak: null, error };
-    }
-
-    return { streak: data as number, error: null };
-  } catch (err) {
-    return {
-      streak: null,
-      error: err instanceof Error ? err : new Error('Unknown error getting streak'),
-    };
-  }
-}
-
-/**
- * Get the current user's capture streak
- */
-export async function getMyStreak(): Promise<{
-  streak: number | null;
-  error: PostgrestError | Error | null;
-}> {
-  const supabase = getSupabase();
-
-  try {
-    const { data, error } = await supabase.rpc('get_my_streak');
-
-    if (error) {
-      return { streak: null, error };
-    }
-
-    return { streak: data as number, error: null };
-  } catch (err) {
-    return {
-      streak: null,
-      error: err instanceof Error ? err : new Error('Unknown error getting streak'),
-    };
-  }
+  return { data: normalizeProfiles(data), error };
 }

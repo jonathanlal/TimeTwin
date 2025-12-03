@@ -141,7 +141,7 @@ export default function InsightsScreen() {
             <Text variant="body" style={{ color: theme.colors.textSecondary }}>
               {error}
             </Text>
-            <Button title="Try Again" onPress={loadAnalytics} variant="primary" />
+            <Button onPress={loadAnalytics} variant="primary">Try Again</Button>
           </Card>
         ) : analytics ? (
           <View style={{ gap: theme.spacing[4] }}>

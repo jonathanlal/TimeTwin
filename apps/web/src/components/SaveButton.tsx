@@ -2,33 +2,54 @@
 
 import { useState, useEffect } from 'react'
 import { Button } from './ui/button'
-import { recordCapture } from '@timetwin/api-sdk'
+import { recordCapture, isTwinTime } from '@timetwin/api-sdk'
+import { cn } from '@/lib/utils'
 
-export function SaveButton() {
-  const [currentTime, setCurrentTime] = useState(new Date())
+type SaveButtonSize = 'default' | 'compact'
+
+interface SaveButtonProps {
+  size?: SaveButtonSize
+  fullWidth?: boolean
+  className?: string
+}
+
+export function SaveButton({ size = 'default', fullWidth = false, className }: SaveButtonProps) {
   const [loading, setLoading] = useState(false)
+  const [serverWindowOpen, setServerWindowOpen] = useState(false)
 
-  // Update current time every second
+  // Poll server window status every 10 seconds
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentTime(new Date())
-    }, 1000)
+    let mounted = true
+    const checkServerWindow = async () => {
+      try {
+        const { open } = await isTwinTime()
+        if (mounted) {
+          setServerWindowOpen(open)
+        }
+      } catch (error) {
+        console.error('Failed to check twin time window:', error)
+      }
+    }
 
-    return () => clearInterval(interval)
+    checkServerWindow()
+    const interval = setInterval(checkServerWindow, 10000)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
   }, [])
 
-  const isDoubleDigits = () => {
-    const hours = currentTime.getHours().toString().padStart(2, '0')
-    const minutes = currentTime.getMinutes().toString().padStart(2, '0')
-    return hours === minutes
-  }
-
   const handleCapture = async () => {
-    if (!isDoubleDigits()) return
-
     setLoading(true)
 
     try {
+      const { open } = await isTwinTime()
+      if (!open) {
+        setServerWindowOpen(false)
+        alert('Twin time window closed. Wait until the minute matches the hour (e.g. 11:11).')
+        return
+      }
+
       const { data, error } = await recordCapture({})
 
       if (error) {
@@ -36,9 +57,13 @@ export function SaveButton() {
         return
       }
 
-      if (data && data.success) {
-        alert(data.message)
+      if (!data) {
+        alert('No response from server')
+        return
       }
+
+      setServerWindowOpen(Boolean(data.success))
+      alert(data.message)
     } catch (error) {
       console.error('Capture error:', error)
       alert('An unexpected error occurred')
@@ -47,14 +72,29 @@ export function SaveButton() {
     }
   }
 
+  const sizeClasses = size === 'compact' ? 'h-10 px-4 text-sm' : 'h-14 px-8 text-lg'
+  const enabled = !loading && serverWindowOpen
+
   return (
     <Button
       onClick={handleCapture}
-      disabled={loading || !isDoubleDigits()}
-      className="bg-green-600 hover:bg-green-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
-      title={!isDoubleDigits() ? 'Only available during twin time (e.g. 11:11, 23:23)' : 'Capture this moment!'}
+      disabled={!enabled}
+      className={cn(
+        'border-2 font-bold transition-all duration-300 disabled:cursor-not-allowed',
+        enabled
+          ? 'border-emerald-400 text-white shadow-[0_0_25px_rgba(16,185,129,0.35)] bg-gradient-to-r from-emerald-500 via-lime-400 to-emerald-500 animate-shimmer hover:shadow-[0_0_30px_rgba(16,185,129,0.55)]'
+          : 'border-red-500/40 text-red-300 bg-red-500/5',
+        fullWidth && 'w-full',
+        sizeClasses,
+        className,
+      )}
+      title={
+        serverWindowOpen
+          ? 'Capture this moment!'
+          : 'Only available during twin time (e.g. 11:11, 23:23) based on server time'
+      }
     >
-      {loading ? 'SAVING...' : 'SAVE'}
+      {loading ? 'SAVING...' : serverWindowOpen ? 'SAVE' : 'WAIT'}
     </Button>
   )
 }

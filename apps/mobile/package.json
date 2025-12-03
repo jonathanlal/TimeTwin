@@ -1,6 +1,7 @@
 {
   "name": "@timetwin/mobile",
   "private": true,
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "start": "expo start",
@@ -11,24 +12,31 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
+    "@babel/runtime": "^7.28.4",
+    "@expo/metro-runtime": "~6.1.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@timetwin/api-sdk": "workspace:*",
     "@timetwin/theme": "workspace:*",
     "@timetwin/ui": "workspace:*",
-    "expo": "^51.0.0",
-    "expo-router": "^3.5.9",
-    "expo-constants": "^16.0.0",
-    "expo-secure-store": "^13.0.0",
-    "@react-native-async-storage/async-storage": "^1.21.0",
-    "react": "^18.2.0",
-    "react-native": "0.75.0",
-    "react-native-safe-area-context": "^4.8.0",
-    "react-native-screens": "^3.29.0"
+    "expo": "~54.0.0",
+    "expo-constants": "~18.0.10",
+    "expo-linking": "~8.0.9",
+    "expo-router": "~6.0.15",
+    "expo-secure-store": "~15.0.2",
+    "expo-status-bar": "~3.0.8",
+    "react": "19.1.0",
+    "react-dom": "19.1.0",
+    "react-native": "0.81.5",
+    "react-native-safe-area-context": "~5.6.0",
+    "react-native-screens": "~4.16.0",
+    "react-native-web": "^0.21.0"
   },
   "devDependencies": {
     "@timetwin/config": "workspace:*",
-    "@types/react": "^18.2.0",
-    "@typescript-eslint/parser": "^8.0.0",
+    "@types/react": "~19.1.10",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@typescript-eslint/parser": "^8.0.0",
+    "babel-plugin-module-resolver": "^5.0.2",
     "eslint": "^9.0.0",
     "typescript": "^5.3.3"
   }

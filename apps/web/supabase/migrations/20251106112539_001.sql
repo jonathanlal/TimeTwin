@@ -45,7 +45,7 @@ create table if not exists public.profiles (
   created_at timestamptz default now(),
   avatar_url text,
   country_code text references public.countries(code),
-  tz text default 'UTC',
+  timezone text default 'UTC',
   privacy text check (privacy in ('public','private')) default 'public',
   constraint country_code_ck check (country_code ~ '^[A-Z]{2}$')
 );
@@ -81,13 +81,19 @@ alter table public.profiles enable row level security;
 alter table public.captures enable row level security;
 alter table public.daily_stats enable row level security;
 
+drop policy if exists read_public_profiles on public.profiles;
 create policy read_public_profiles on public.profiles
   for select using (privacy = 'public' or auth.uid() = user_id);
+
+drop policy if exists update_own_profile on public.profiles;
 create policy update_own_profile on public.profiles
   for update using (auth.uid() = user_id);
+
+drop policy if exists insert_own_profile on public.profiles;
 create policy insert_own_profile on public.profiles
   for insert with check (auth.uid() = user_id);
 
+drop policy if exists select_captures_public_profiles on public.captures;
 create policy select_captures_public_profiles on public.captures
   for select using (
     auth.uid() = user_id OR EXISTS (
@@ -95,13 +101,17 @@ create policy select_captures_public_profiles on public.captures
       where p.user_id = public.captures.user_id and p.privacy = 'public'
     )
   );
+
+drop policy if exists insert_own_captures on public.captures;
 create policy insert_own_captures on public.captures
   for insert with check (auth.uid() = user_id);
+
+drop policy if exists delete_own_captures on public.captures;
 create policy delete_own_captures on public.captures
   for delete using (auth.uid() = user_id);
 
 -- RPC
-create or replace function public.record_capture()
+create or replace function public.record_capture(p_note text default null, p_mood text default null)
 returns public.captures
 language plpgsql
 security definer
@@ -117,8 +127,8 @@ begin
     raise exception 'Window closed';
   end if;
 
-  insert into public.captures (user_id, server_ts, diff_seconds)
-  values (auth.uid(), now_ts, diff)
+  insert into public.captures (user_id, server_ts, diff_seconds, note, mood)
+  values (auth.uid(), now_ts, diff, p_note, p_mood)
   returning * into new_row;
 
   insert into public.daily_stats (user_id, day, captures_count, best_diff)
@@ -132,24 +142,24 @@ end;$$;
 
 -- Views
 create or replace view public.v_leaderboard_total as
-select p.username,
-       count(c.id) as captures,
-       round(avg(c.diff_seconds),2) as avg_diff
+select
+  p.user_id,
+  p.username,
+  p.country_code,
+  count(c.id)::bigint as total_captures
 from public.captures c
 join public.profiles p on p.user_id = c.user_id
 where p.privacy = 'public'
-group by p.username
-order by captures desc;
+group by p.user_id, p.username, p.country_code;
 
 create or replace view public.v_country_stats as
-select coalesce(cnt.name, p.country_code) as country,
-       p.country_code,
-       count(c.id) as captures,
-       round(avg(c.diff_seconds),2) as avg_diff,
-       count(distinct c.user_id) as users
+select
+  p.country_code,
+  coalesce(cnt.name, p.country_code) as country_name,
+  count(c.id)::bigint as total_captures,
+  count(distinct c.user_id)::bigint as user_count
 from public.captures c
 join public.profiles p on p.user_id = c.user_id
 left join public.countries cnt on cnt.code = p.country_code
 where p.privacy = 'public'
-group by country, p.country_code
-order by captures desc;
+group by p.country_code, coalesce(cnt.name, p.country_code);

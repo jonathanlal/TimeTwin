@@ -6,8 +6,9 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer, User, Trophy, LogOut, History as HistoryIcon, Search, TrendingUp, Target, Clock, Heart } from 'lucide-react'
-import { getMyAnalytics, signOut, type AnalyticsData } from '@timetwin/api-sdk'
+import { Timer, TrendingUp, Target, Clock, Heart } from 'lucide-react'
+import { getMyAnalytics, type AnalyticsData } from '@timetwin/api-sdk'
+import { MainNav } from '@/components/MainNav'
 
 export default function InsightsPage() {
   const router = useRouter()
@@ -15,6 +16,17 @@ export default function InsightsPage() {
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+
+  const analyticsData = analytics
+  const hasAnalyticsData = !!(
+    analyticsData &&
+    (
+      (analyticsData.accuracy_stats?.total_captures ?? 0) > 0 ||
+      analyticsData.time_distribution.length > 0 ||
+      analyticsData.mood_distribution.length > 0 ||
+      analyticsData.recent_activity.length > 0
+    )
+  )
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -47,11 +59,6 @@ export default function InsightsPage() {
     } finally {
       setLoading(false)
     }
-  }
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
   }
 
   const getAccuracyColor = (seconds: number) => {
@@ -89,42 +96,7 @@ export default function InsightsPage() {
             <Timer className="h-6 w-6" />
             <h1 className="text-2xl font-bold">TimeTwin</h1>
           </Link>
-          <nav className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/timer">
-                <Timer className="h-4 w-4 mr-2" />
-                Timer
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/history">
-                <HistoryIcon className="h-4 w-4 mr-2" />
-                History
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/search">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/leaderboard">
-                <Trophy className="h-4 w-4 mr-2" />
-                Leaderboard
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/profile">
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Link>
-            </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </nav>
+          <MainNav />
         </div>
       </header>
 
@@ -152,7 +124,7 @@ export default function InsightsPage() {
                 </Button>
               </CardContent>
             </Card>
-          ) : analytics ? (
+          ) : hasAnalyticsData && analyticsData ? (
             <div className="space-y-6">
               {/* Accuracy Stats */}
               <Card>
@@ -166,38 +138,38 @@ export default function InsightsPage() {
                 <CardContent>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
                     <div className="text-center">
-                      <p className={`text-3xl font-bold ${getAccuracyColor(analytics.accuracy_stats.avg_accuracy)}`}>
-                        {analytics.accuracy_stats.avg_accuracy}s
+                      <p className={`text-3xl font-bold ${getAccuracyColor(analyticsData.accuracy_stats.avg_accuracy)}`}>
+                        {analyticsData.accuracy_stats.avg_accuracy}s
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Average Accuracy</p>
                     </div>
                     <div className="text-center">
                       <p className="text-3xl font-bold text-green-500">
-                        {analytics.accuracy_stats.best_accuracy}s
+                        {analyticsData.accuracy_stats.best_accuracy}s
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Best Capture</p>
                     </div>
                     <div className="text-center">
                       <p className="text-3xl font-bold text-green-500">
-                        {analytics.accuracy_stats.perfect_captures}
+                        {analyticsData.accuracy_stats.perfect_captures}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Perfect (≤3s)</p>
                     </div>
                     <div className="text-center">
                       <p className="text-3xl font-bold text-yellow-500">
-                        {analytics.accuracy_stats.great_captures}
+                        {analyticsData.accuracy_stats.great_captures}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Great (4-10s)</p>
                     </div>
                     <div className="text-center">
                       <p className="text-3xl font-bold text-muted-foreground">
-                        {analytics.accuracy_stats.good_captures}
+                        {analyticsData.accuracy_stats.good_captures}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Good (&gt;10s)</p>
                     </div>
                     <div className="text-center">
                       <p className="text-3xl font-bold">
-                        {analytics.accuracy_stats.total_captures}
+                        {analyticsData.accuracy_stats.total_captures}
                       </p>
                       <p className="text-sm text-muted-foreground mt-1">Total Captures</p>
                     </div>
@@ -206,7 +178,7 @@ export default function InsightsPage() {
               </Card>
 
               {/* Time Distribution */}
-              {analytics.time_distribution.length > 0 && (
+              {analyticsData.time_distribution.length > 0 && (
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-2">
@@ -217,11 +189,11 @@ export default function InsightsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {analytics.time_distribution
+                      {analyticsData.time_distribution
                         .sort((a, b) => b.count - a.count)
                         .slice(0, 10)
                         .map((item) => {
-                          const maxCount = Math.max(...analytics.time_distribution.map(d => d.count))
+                          const maxCount = Math.max(...analyticsData.time_distribution.map(d => d.count))
                           const percentage = (item.count / maxCount) * 100
                           return (
                             <div key={item.hour}>
@@ -244,7 +216,7 @@ export default function InsightsPage() {
               )}
 
               {/* Mood Distribution */}
-              {analytics.mood_distribution.length > 0 && (
+              {analyticsData.mood_distribution.length > 0 && (
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-2">
@@ -255,7 +227,7 @@ export default function InsightsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {analytics.mood_distribution.map((item) => (
+                      {analyticsData.mood_distribution.map((item) => (
                         <div key={item.mood} className="text-center p-4 border border-border rounded-lg">
                           <p className="text-4xl mb-2">{getMoodEmoji(item.mood)}</p>
                           <p className="font-semibold capitalize">{item.mood}</p>
@@ -269,7 +241,7 @@ export default function InsightsPage() {
               )}
 
               {/* Recent Activity */}
-              {analytics.recent_activity.length > 0 && (
+              {analyticsData.recent_activity.length > 0 && (
                 <Card>
                   <CardHeader>
                     <div className="flex items-center gap-2">
@@ -280,9 +252,9 @@ export default function InsightsPage() {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      {analytics.recent_activity.slice(0, 14).map((item) => {
+                      {analyticsData.recent_activity.slice(0, 14).map((item) => {
                         const date = new Date(item.date)
-                        const maxCount = Math.max(...analytics.recent_activity.map(d => d.count))
+                        const maxCount = Math.max(...analyticsData.recent_activity.map(d => d.count))
                         const percentage = (item.count / maxCount) * 100
                         return (
                           <div key={item.date}>
@@ -307,14 +279,15 @@ export default function InsightsPage() {
               )}
             </div>
           ) : (
-            <Card>
+            <Card className="border border-dashed border-primary/30 bg-primary/5">
               <CardContent className="py-12 text-center">
-                <p className="text-muted-foreground">No analytics data available yet.</p>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Start capturing time to see your insights!
+                <TrendingUp className="h-12 w-12 mx-auto mb-4 text-primary" />
+                <h3 className="text-2xl font-semibold mb-2">Insights unlock after your first captures</h3>
+                <p className="text-muted-foreground mb-4">
+                  Come back once you have a few twin time logs and we will chart your accuracy, moods, and streaks.
                 </p>
-                <Button asChild className="mt-4">
-                  <Link href="/timer">Go to Timer</Link>
+                <Button asChild>
+                  <Link href="/timer">Go Capture a Moment</Link>
                 </Button>
               </CardContent>
             </Card>

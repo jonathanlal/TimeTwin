@@ -4,13 +4,14 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
-import { recordCapture, getTodayStats, signOut, type CaptureMood } from '@timetwin/api-sdk'
+import { recordCapture, getTodayStats, isTwinTime, type CaptureMood } from '@timetwin/api-sdk'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer as TimerIcon, LogOut, Trophy, User, Sparkles, Smile, Meh, Brain, Heart, Star, History as HistoryIcon, Search, TrendingUp } from 'lucide-react'
-import { SaveButton } from '@/components/SaveButton'
+import { Timer as TimerIcon, Sparkles, Smile, Meh, Brain, Heart, Star } from 'lucide-react'
+import { MainNav } from '@/components/MainNav'
+import { cn } from '@/lib/utils'
 
 const MOOD_OPTIONS: Array<{ value: CaptureMood; label: string; icon: typeof Sparkles; color: string }> = [
   { value: 'excited', label: 'Excited', icon: Sparkles, color: 'text-yellow-500' },
@@ -30,6 +31,7 @@ export default function TimerPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   const [note, setNote] = useState('')
   const [mood, setMood] = useState<CaptureMood | null>(null)
+  const [serverWindowOpen, setServerWindowOpen] = useState(false)
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -54,6 +56,29 @@ export default function TimerPage() {
     }
   }, [user])
 
+  // Poll server twin-time window to keep UI truthful
+  useEffect(() => {
+    let mounted = true
+
+    const checkWindow = async () => {
+      try {
+        const { open } = await isTwinTime()
+        if (mounted) {
+          setServerWindowOpen(open)
+        }
+      } catch (error) {
+        console.error('Failed to check twin time window:', error)
+      }
+    }
+
+    checkWindow()
+    const interval = setInterval(checkWindow, 10000)
+    return () => {
+      mounted = false
+      clearInterval(interval)
+    }
+  }, [])
+
   const loadTodayStats = async () => {
     try {
       const { data } = await getTodayStats()
@@ -66,6 +91,13 @@ export default function TimerPage() {
   }
 
   const handleCapture = async () => {
+    if (!serverWindowOpen) {
+      setMessage({
+        type: 'error',
+        text: 'Server window closed. Wait until the hour matches the minute (e.g. 11:11).',
+      })
+      return
+    }
     setLoading(true)
     setMessage(null)
 
@@ -97,22 +129,11 @@ export default function TimerPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
   const formatTime = () => {
     const hours = currentTime.getHours().toString().padStart(2, '0')
     const minutes = currentTime.getMinutes().toString().padStart(2, '0')
     const seconds = currentTime.getSeconds().toString().padStart(2, '0')
     return { hours, minutes, seconds }
-  }
-
-  const isDoubleDigits = () => {
-    const hours = currentTime.getHours().toString().padStart(2, '0')
-    const minutes = currentTime.getMinutes().toString().padStart(2, '0')
-    return hours === minutes
   }
 
   if (authLoading) {
@@ -139,39 +160,7 @@ export default function TimerPage() {
             <TimerIcon className="h-6 w-6" />
             <span className="font-bold text-xl">TimeTwin</span>
           </Link>
-          <nav className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/history">
-                <HistoryIcon className="h-4 w-4 mr-2" />
-                History
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/insights">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Insights
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/search">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/leaderboard">
-                <Trophy className="h-4 w-4 mr-2" />
-                Leaderboard
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/profile">
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Link>
-            </Button>
-            <SaveButton />
-          </nav>
+          <MainNav />
         </div>
       </header>
 
@@ -251,14 +240,24 @@ export default function TimerPage() {
               <Button
                 size="lg"
                 onClick={handleCapture}
-                disabled={loading || !isDoubleDigits()}
-                className="w-full text-2xl h-20 bg-green-600 hover:bg-green-700 text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={loading || !serverWindowOpen}
+                className={cn(
+                  'w-full text-2xl h-20 border-2 font-bold disabled:cursor-not-allowed transition-all duration-300',
+                  loading || !serverWindowOpen
+                    ? 'border-red-500/40 text-red-300 bg-red-500/5'
+                    : 'border-emerald-400 text-white shadow-[0_0_35px_rgba(16,185,129,0.35)] bg-gradient-to-r from-emerald-500 via-lime-400 to-emerald-500 animate-shimmer hover:shadow-[0_0_40px_rgba(16,185,129,0.55)]',
+                )}
+                title={
+                  serverWindowOpen
+                    ? 'Capture this moment!'
+                    : 'Only available during twin time (e.g. 11:11, 23:23) based on server time'
+                }
               >
-                {loading ? 'SAVING...' : 'SAVE'}
+                {loading ? 'SAVING...' : serverWindowOpen ? 'SAVE' : 'WAIT'}
               </Button>
 
               {/* Twin Time Message */}
-              {!isDoubleDigits() && !message && (
+              {!serverWindowOpen && !message && (
                 <p className="text-sm text-center text-muted-foreground">
                   Button is only available during twin time (when hour equals minute, like 11:11 or 23:23)
                 </p>
@@ -279,9 +278,11 @@ export default function TimerPage() {
             </CardContent>
           </Card>
 
-          <p className="text-sm text-muted-foreground text-center mt-4">
-            Logged in as {user.email}
-          </p>
+          {user?.email && (
+            <p className="text-sm text-muted-foreground text-center mt-4">
+              Logged in as {user.email}
+            </p>
+          )}
         </div>
       </main>
     </div>

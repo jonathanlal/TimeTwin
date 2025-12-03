@@ -3,9 +3,7 @@ import { View, StyleSheet, ScrollView, Alert } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@timetwin/theme';
-import { Text } from '@/components/Text';
-import { Button } from '@/components/Button';
-import { Input } from '@/components/Input';
+import { Text, Button, Input } from '@timetwin/ui';
 import { getMyCaptures, type Capture, type CaptureMood } from '@timetwin/api-sdk';
 
 const MOOD_EMOJIS: Record<CaptureMood, string> = {
@@ -120,8 +118,8 @@ export default function HistoryScreen() {
     },
     header: {
       paddingTop: 60,
-      paddingHorizontal: theme.spacing[4],
-      paddingBottom: theme.spacing[4],
+      paddingHorizontal: 16,
+      paddingBottom: 16,
       borderBottomWidth: 1,
       borderBottomColor: theme.colors.border,
       backgroundColor: theme.colors.surface,
@@ -130,39 +128,39 @@ export default function HistoryScreen() {
       flex: 1,
     },
     scrollContent: {
-      padding: theme.spacing[4],
+      padding: 16,
     },
     filterSection: {
       backgroundColor: theme.colors.surface,
-      padding: theme.spacing[4],
+      padding: 16,
       borderRadius: theme.borderRadius.md,
-      marginBottom: theme.spacing[4],
-      gap: theme.spacing[3],
+      marginBottom: 16,
+      gap: 12,
     },
     moodFilterContainer: {
       flexDirection: 'row',
       flexWrap: 'wrap',
-      gap: theme.spacing[2],
+      gap: 8,
     },
     moodFilterButton: {
-      paddingVertical: theme.spacing[2],
-      paddingHorizontal: theme.spacing[3],
+      paddingVertical: 8,
+      paddingHorizontal: 12,
       borderRadius: theme.borderRadius.sm,
       borderWidth: 1,
     },
     captureCard: {
       backgroundColor: theme.colors.surface,
-      padding: theme.spacing[4],
+      padding: 16,
       borderRadius: theme.borderRadius.md,
-      marginBottom: theme.spacing[3],
+      marginBottom: 12,
       borderWidth: 1,
       borderColor: theme.colors.border,
     },
     captureHeader: {
       flexDirection: 'row',
       alignItems: 'center',
-      gap: theme.spacing[2],
-      marginBottom: theme.spacing[2],
+      gap: 8,
+      marginBottom: 8,
     },
     moodEmoji: {
       fontSize: 24,
@@ -170,8 +168,8 @@ export default function HistoryScreen() {
     emptyContainer: {
       alignItems: 'center',
       justifyContent: 'center',
-      paddingVertical: theme.spacing[8],
-      gap: theme.spacing[2],
+      paddingVertical: 32,
+      gap: 8,
     },
     loadingContainer: {
       flex: 1,
@@ -222,25 +220,28 @@ export default function HistoryScreen() {
             <Text variant="label" style={{ marginBottom: theme.spacing[2] }}>Mood</Text>
             <View style={styles.moodFilterContainer}>
               <Button
-                title="All"
                 variant={moodFilter === 'all' ? 'primary' : 'secondary'}
                 onPress={() => setMoodFilter('all')}
                 style={{ flex: 0 }}
-              />
+              >
+                All
+              </Button>
               <Button
-                title="No mood"
                 variant={moodFilter === 'none' ? 'primary' : 'secondary'}
                 onPress={() => setMoodFilter('none')}
                 style={{ flex: 0 }}
-              />
+              >
+                No mood
+              </Button>
               {(Object.keys(MOOD_LABELS) as CaptureMood[]).map((mood) => (
                 <Button
                   key={mood}
-                  title={MOOD_EMOJIS[mood]}
                   variant={moodFilter === mood ? 'primary' : 'secondary'}
                   onPress={() => setMoodFilter(mood)}
                   style={{ flex: 0 }}
-                />
+                >
+                  {MOOD_EMOJIS[mood]}
+                </Button>
               ))}
             </View>
           </View>

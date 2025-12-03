@@ -64,14 +64,14 @@ export async function getUserCaptures(
     .from('captures')
     .select('*')
     .eq('user_id', userId)
-    .order('captured_at', { ascending: false });
+    .order('server_ts', { ascending: false });
 
   if (options?.startDate) {
-    query = query.gte('captured_at', options.startDate);
+    query = query.gte('server_ts', options.startDate);
   }
 
   if (options?.endDate) {
-    query = query.lte('captured_at', options.endDate);
+    query = query.lte('server_ts', options.endDate);
   }
 
   if (options?.limit) {
@@ -143,8 +143,8 @@ export async function getCapturesByHour(
     .from('captures')
     .select('*')
     .eq('user_id', user.id)
-    .eq('hour_label', hourLabel)
-    .order('captured_at', { ascending: false })
+    .eq('label_str', hourLabel)
+    .order('server_ts', { ascending: false })
     .limit(options?.limit || 100);
 
   return { data, error };
@@ -183,4 +183,10 @@ export async function getMyCaptureCount(): Promise<{
   }
 
   return getUserCaptureCount(user.id);
+}
+
+export async function isTwinTime(): Promise<{ open: boolean; error: PostgrestError | null }> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.rpc('is_twin_time');
+  return { open: Boolean(data), error: error ?? null };
 }

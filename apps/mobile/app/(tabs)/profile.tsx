@@ -90,7 +90,7 @@ export default function ProfileScreen() {
           try {
             await signOut();
             router.replace('/(auth)/login');
-          } catch (error) {
+          } catch {
             Alert.alert('Error', 'Failed to sign out');
           }
         },

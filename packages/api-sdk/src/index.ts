@@ -36,7 +36,7 @@ export {
   getMyStreak,
 } from './profiles';
 
-export type { ProfileResult, ProfilesResult } from './profiles';
+export type { ProfileResult, ProfilesResult, StreakResult } from './profiles';
 
 // Captures
 export {
@@ -47,6 +47,7 @@ export {
   getCapturesByHour,
   getUserCaptureCount,
   getMyCaptureCount,
+  isTwinTime,
 } from './captures';
 
 export type {

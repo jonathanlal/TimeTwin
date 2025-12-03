@@ -7,8 +7,9 @@ import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer, User, Trophy, LogOut, History as HistoryIcon, Search as SearchIcon, TrendingUp } from 'lucide-react'
-import { searchProfiles, signOut, type Profile } from '@timetwin/api-sdk'
+import { Timer, User, Search as SearchIcon } from 'lucide-react'
+import { searchProfiles, type Profile } from '@timetwin/api-sdk'
+import { MainNav } from '@/components/MainNav'
 
 export default function SearchPage() {
   const router = useRouter()
@@ -56,11 +57,6 @@ export default function SearchPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
   if (!initialized || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -78,42 +74,7 @@ export default function SearchPage() {
             <Timer className="h-6 w-6" />
             <h1 className="text-2xl font-bold">TimeTwin</h1>
           </Link>
-          <nav className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/timer">
-                <Timer className="h-4 w-4 mr-2" />
-                Timer
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/history">
-                <HistoryIcon className="h-4 w-4 mr-2" />
-                History
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/insights">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Insights
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/leaderboard">
-                <Trophy className="h-4 w-4 mr-2" />
-                Leaderboard
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/profile">
-                <User className="h-4 w-4 mr-2" />
-                Profile
-              </Link>
-            </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </nav>
+          <MainNav />
         </div>
       </header>
 

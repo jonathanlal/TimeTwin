@@ -1,17 +1,16 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer, Trophy, Medal, Award, User, LogOut, History as HistoryIcon, Search, TrendingUp } from 'lucide-react'
-import { getGlobalLeaderboard, getCountryLeaderboard, getAllCountries, signOut, type LeaderboardEntry, type Country } from '@timetwin/api-sdk'
+import { Card, CardContent } from '@/components/ui/card'
+import { Timer, Trophy, Medal, Award } from 'lucide-react'
+import { getGlobalLeaderboard, getCountryLeaderboard, getAllCountries, type LeaderboardEntry, type Country } from '@timetwin/api-sdk'
+import { MainNav } from '@/components/MainNav'
 
 export default function LeaderboardPage() {
-  const router = useRouter()
-  const { user, initialized } = useAuth()
+  const { initialized } = useAuth()
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
   const [countries, setCountries] = useState<Country[]>([])
   const [selectedCountry, setSelectedCountry] = useState<string>('all')
@@ -62,11 +61,6 @@ export default function LeaderboardPage() {
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
   const getRankIcon = (index: number) => {
     switch (index) {
       case 0:
@@ -89,58 +83,7 @@ export default function LeaderboardPage() {
             <Timer className="h-6 w-6" />
             <h1 className="text-2xl font-bold">TimeTwin</h1>
           </Link>
-          <nav className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/">Home</Link>
-            </Button>
-            {user ? (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/timer">
-                    <Timer className="h-4 w-4 mr-2" />
-                    Timer
-                  </Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/history">
-                    <HistoryIcon className="h-4 w-4 mr-2" />
-                    History
-                  </Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/insights">
-                    <TrendingUp className="h-4 w-4 mr-2" />
-                    Insights
-                  </Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/search">
-                    <Search className="h-4 w-4 mr-2" />
-                    Search
-                  </Link>
-                </Button>
-                <Button variant="ghost" asChild>
-                  <Link href="/profile">
-                    <User className="h-4 w-4 mr-2" />
-                    Profile
-                  </Link>
-                </Button>
-                <Button variant="outline" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button variant="ghost" asChild>
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link href="/signup">Sign Up</Link>
-                </Button>
-              </>
-            )}
-          </nav>
+          <MainNav />
         </div>
       </header>
 

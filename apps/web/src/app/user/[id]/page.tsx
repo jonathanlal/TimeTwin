@@ -6,16 +6,16 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Timer as TimerIcon, User as UserIcon, Trophy, LogOut, History as HistoryIcon, ArrowLeft, Search, TrendingUp } from 'lucide-react'
+import { Timer as TimerIcon, User as UserIcon, ArrowLeft } from 'lucide-react'
 import {
   getProfile,
   getUserCaptureCount,
   getUserStreak,
   getUserCaptures,
-  signOut,
   type Profile,
   type Capture,
 } from '@timetwin/api-sdk'
+import { MainNav } from '@/components/MainNav'
 
 export default function UserProfilePage() {
   const router = useRouter()
@@ -83,11 +83,6 @@ export default function UserProfilePage() {
     }
   }
 
-  const handleSignOut = async () => {
-    await signOut()
-    router.push('/')
-  }
-
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr)
     return date.toLocaleDateString('en-US', {
@@ -115,42 +110,7 @@ export default function UserProfilePage() {
             <TimerIcon className="h-6 w-6" />
             <h1 className="text-2xl font-bold">TimeTwin</h1>
           </Link>
-          <nav className="flex items-center space-x-4">
-            <Button variant="ghost" asChild>
-              <Link href="/timer">
-                <TimerIcon className="h-4 w-4 mr-2" />
-                Timer
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/insights">
-                <TrendingUp className="h-4 w-4 mr-2" />
-                Insights
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/search">
-                <Search className="h-4 w-4 mr-2" />
-                Search
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/leaderboard">
-                <Trophy className="h-4 w-4 mr-2" />
-                Leaderboard
-              </Link>
-            </Button>
-            <Button variant="ghost" asChild>
-              <Link href="/profile">
-                <UserIcon className="h-4 w-4 mr-2" />
-                My Profile
-              </Link>
-            </Button>
-            <Button variant="outline" onClick={handleSignOut}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Sign Out
-            </Button>
-          </nav>
+          <MainNav />
         </div>
       </header>
 
@@ -261,3 +221,7 @@ export default function UserProfilePage() {
     </div>
   )
 }
+
+
+
+

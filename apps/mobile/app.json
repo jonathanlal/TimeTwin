@@ -21,11 +21,17 @@
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#0D0F12"
-      }
+      },
+      "package": "com.anonymous.timetwin"
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
-    }
+      "output": "single"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store"
+    ],
+    "newArchEnabled": true
   }
 }

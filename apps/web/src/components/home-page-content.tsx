@@ -25,13 +25,8 @@ import {
   Sparkles,
   Smartphone,
   TimerReset,
-  Timer,
-  Trophy,
-  User,
-  LogOut,
 } from 'lucide-react'
-import { signOut } from '@timetwin/api-sdk'
-import { useRouter } from 'next/navigation'
+import { MainNav } from '@/components/MainNav'
 
 const heroPoints: Array<{ icon: LucideIcon; label: string }> = [
   { icon: Sparkles, label: 'Capture repeating numbers with one tap' },
@@ -120,13 +115,7 @@ const sampleMoments: Array<{ time: string; note: string; detail: string; icon: L
 ]
 
 export function HomePageContent() {
-  const router = useRouter()
   const { user } = useAuth()
-
-  const handleSignOut = async () => {
-    await signOut()
-    router.refresh()
-  }
 
   return (
     <div className="relative min-h-screen overflow-hidden bg-slate-950 text-slate-100">
@@ -141,52 +130,7 @@ export function HomePageContent() {
             </span>
             TimeTwin
           </Link>
-          <nav className="hidden items-center gap-6 text-sm font-medium text-slate-300 md:flex">
-            {user ? (
-              <>
-                <Link className="transition hover:text-sky-300" href="/timer">
-                  <Timer className="inline h-4 w-4 mr-1" />
-                  Timer
-                </Link>
-                <Link className="transition hover:text-sky-300" href="/leaderboard">
-                  <Trophy className="inline h-4 w-4 mr-1" />
-                  Leaderboard
-                </Link>
-                <Link className="transition hover:text-sky-300" href="/profile">
-                  <User className="inline h-4 w-4 mr-1" />
-                  Profile
-                </Link>
-                <Button variant="outline" size="sm" onClick={handleSignOut}>
-                  <LogOut className="h-4 w-4 mr-1" />
-                  Sign Out
-                </Button>
-              </>
-            ) : (
-              <>
-                <Link className="transition hover:text-sky-300" href="#learn">
-                  What it does
-                </Link>
-                <Link className="transition hover:text-sky-300" href="#how">
-                  How it works
-                </Link>
-                <Link className="transition hover:text-sky-300" href="#download">
-                  Download
-                </Link>
-                <Link className="transition hover:text-sky-300" href="/leaderboard">
-                  Leaderboard
-                </Link>
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/login">Sign In</Link>
-                </Button>
-                <Button asChild size="sm">
-                  <Link href="/signup">
-                    Get Started
-                    <ArrowRight className="ml-2 h-4 w-4" />
-                  </Link>
-                </Button>
-              </>
-            )}
-          </nav>
+          <MainNav />
           {!user && (
             <Button asChild size="sm" className="md:hidden">
               <Link href="/signup">Get Started</Link>
@@ -367,3 +311,6 @@ export function HomePageContent() {
     </div>
   )
 }
+
+
+
