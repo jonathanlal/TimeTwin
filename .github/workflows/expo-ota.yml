@@ -21,4 +21,5 @@ jobs:
         run: npx eas-cli login --token ${{ secrets.EAS_TOKEN }}
       - name: Publish OTA to production
         working-directory: apps/mobile
-        run: npx eas update --branch production --message "ci: OTA $(git rev-parse --short HEAD)"
+        run: |
+          npx eas update --branch production --message "ci: OTA $(git rev-parse --short HEAD)"

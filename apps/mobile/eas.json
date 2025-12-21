@@ -12,8 +12,7 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true,
-      "autoSubmit": true
+      "autoIncrement": true
     }
   },
   "submit": {
@@ -23,8 +22,7 @@
         "releaseStatus": "draft"
       },
       "ios": {
-        "language": "en-US",
-        "type": "production"
+        "language": "en-US"
       }
     }
   }
