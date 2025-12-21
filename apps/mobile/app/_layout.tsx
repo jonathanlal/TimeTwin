@@ -8,6 +8,12 @@ import { AuthProvider } from '../src/contexts/AuthContext';
 import { validateEnv } from '../src/config/env';
 import * as QuickActions from 'expo-quick-actions';
 import { useQuickAction } from 'expo-quick-actions/hooks';
+import { useWatchConnectivity } from '../hooks/useWatchConnectivity';
+
+function WatchListener() {
+  useWatchConnectivity();
+  return null;
+}
 
 /**
  * Root layout component
@@ -26,7 +32,7 @@ export default function RootLayout() {
     QuickActions.setItems([
       {
         title: 'Capture Time',
-        subtitle: 'Record a moment instanty',
+        subtitle: 'Record a moment instantly',
         icon: 'compose', // iOS system icon
         id: 'capture',
         params: { href: '/(tabs)/index?action=capture' },
@@ -73,6 +79,7 @@ export default function RootLayout() {
       systemTheme={systemColorScheme ?? 'light'}
     >
       <AuthProvider>
+        <WatchListener />
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />
           <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
