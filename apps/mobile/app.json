@@ -5,7 +5,7 @@
     "scheme": "timetwin",
     "version": "0.0.1",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/icon-ouroboros.png",
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
@@ -41,7 +41,7 @@
               "minWidth": "100dp",
               "minHeight": "100dp",
               "description": "Capture the moment instantly",
-              "previewImage": "./assets/icon.png"
+              "previewImage": "./assets/icon-ouroboros.png"
             }
           ]
         }

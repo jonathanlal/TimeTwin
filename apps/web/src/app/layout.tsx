@@ -18,6 +18,9 @@ export const metadata: Metadata = {
     title: 'TimeTwin - Synchronicity Tracker',
     description: 'Never miss 11:11 again. Track your streaks and join the community.',
   },
+  appleWebApp: {
+    title: 'TimeTwin',
+  },
 }
 
 export default function RootLayout({
