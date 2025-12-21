@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity } from 'react-native';
+import { View, ScrollView, StyleSheet, RefreshControl, TouchableOpacity, Image } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Container, Text, Card, Loading } from '@timetwin/ui';
 import { useTheme } from '@timetwin/theme';
-import { getGlobalLeaderboard, getCountryLeaderboard, getAllCountries, getMyRank, type LeaderboardEntry, type Country } from '@timetwin/api-sdk';
+import { useRouter } from 'expo-router';
+import { getGlobalLeaderboard, getCountryLeaderboard, getActiveCountries, getMyRank, type LeaderboardEntry, type Country } from '@timetwin/api-sdk';
 
 export default function LeaderboardScreen() {
   const { theme } = useTheme();
+  const router = useRouter();
+  
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
   const [countries, setCountries] = useState<Country[]>([]);
   const [selectedCountry, setSelectedCountry] = useState<string>('all');
   const [myRank, setMyRank] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     loadCountries();
@@ -24,12 +29,18 @@ export default function LeaderboardScreen() {
 
   const loadCountries = async () => {
     try {
-      const { data } = await getAllCountries();
+      const { data, error } = await getActiveCountries();
       if (data) {
-        setCountries(data);
+        const mapped = data.map((c: any) => ({
+            code: c.iso_code,
+            name: c.name,
+            iso_code: c.iso_code // ensure compatibility with diverse usage
+        })).sort((a: any, b: any) => a.name.localeCompare(b.name));
+        
+        setCountries(mapped as any);
       }
     } catch {
-      // Silently fail - countries are optional
+      // Silently fail
     }
   };
 
@@ -68,117 +79,132 @@ export default function LeaderboardScreen() {
 
   return (
     <Container padding={0}>
+      <View style={styles.headerContainer}>
+        {/* Left: My Rank */}
+        <View style={styles.headerLeft}>
+          {myRank !== null ? (
+            <Text variant="h3" color="secondary">#{myRank}</Text>
+          ) : <View />}
+        </View>
+
+        {/* Center: Title */}
+        <View style={styles.headerCenter}>
+          <Text variant="h2">Leaderboard</Text>
+        </View>
+
+        {/* Right: Filter */}
+        <View style={styles.headerRight}>
+          <TouchableOpacity 
+            onPress={() => setShowFilters(!showFilters)}
+            style={styles.filterButton}
+          >
+            {showFilters ? (
+                <Ionicons name="close" size={24} color={theme.colors.primary} />
+            ) : (
+                <Ionicons name="filter" size={24} color={theme.colors.primary} />
+            )}
+          </TouchableOpacity>
+        </View>
+      </View>
+
       <ScrollView
         contentContainerStyle={{ padding: theme.spacing[4] }}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={handleRefresh} />}
       >
-        <View style={[styles.header, { marginBottom: theme.spacing[4] }]}>
-          <Text variant="h2" align="center">
-            Leaderboard
-          </Text>
-          {myRank !== null && (
-            <Text variant="body" color="secondary" align="center" style={{ marginTop: theme.spacing[2] }}>
-              Your Rank: #{myRank}
+        {/* Country Filter Panel */}
+        {showFilters && (
+          <Card variant="outlined" padding={4} style={{ marginBottom: theme.spacing[4] }}>
+            <Text variant="label" style={{ marginBottom: theme.spacing[2] }}>
+              Filter by country:
             </Text>
-          )}
-        </View>
-
-        {/* Country Filter */}
-        <Card variant="outlined" padding={4} style={{ marginBottom: theme.spacing[4] }}>
-          <Text variant="label" style={{ marginBottom: theme.spacing[2] }}>
-            Filter by country:
-          </Text>
-          <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: theme.spacing[2] }}>
-            <TouchableOpacity
-              onPress={() => setSelectedCountry('all')}
-              style={[
-                styles.countryButton,
-                {
-                  backgroundColor: selectedCountry === 'all' ? theme.colors.primary : theme.colors.cardBackground,
-                  borderColor: selectedCountry === 'all' ? theme.colors.primary : theme.colors.border,
-                }
-              ]}
-            >
-              <Text
-                variant="bodySmall"
-                style={{ color: selectedCountry === 'all' ? '#fff' : theme.colors.text }}
-              >
-                All Countries
-              </Text>
-            </TouchableOpacity>
-            {countries.map((country) => (
-              <TouchableOpacity
-                key={country.code}
-                onPress={() => setSelectedCountry(country.code)}
-                style={[
-                  styles.countryButton,
-                  {
-                    backgroundColor: selectedCountry === country.code ? theme.colors.primary : theme.colors.cardBackground,
-                    borderColor: selectedCountry === country.code ? theme.colors.primary : theme.colors.border,
-                  }
-                ]}
-              >
-                <Text
-                  variant="bodySmall"
-                  style={{ color: selectedCountry === country.code ? '#fff' : theme.colors.text }}
+            <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+              <View style={{ flexDirection: 'row', gap: theme.spacing[2] }}>
+                <TouchableOpacity
+                  style={[
+                    styles.countryButton,
+                    { 
+                      backgroundColor: selectedCountry === 'all' ? theme.colors.primary : 'transparent',
+                      borderColor: theme.colors.primary 
+                    }
+                  ]}
+                  onPress={() => setSelectedCountry('all')}
                 >
-                  {country.name}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        </Card>
-
-        {leaderboard.length === 0 ? (
-          <Card variant="outlined" padding={8}>
-            <Text variant="body" color="secondary" align="center">
-              No entries yet. Be the first!
-            </Text>
-          </Card>
-        ) : (
-          <View style={[styles.list, { gap: theme.spacing[2] }]}>
-            {leaderboard.map((entry, index) => (
-              <Card
-                key={entry.user_id}
-                variant="outlined"
-                padding={4}
-                style={[
-                  styles.leaderboardItem,
-                  index < 3 && { borderColor: getRankColor(index, theme) },
-                ]}
-              >
-                <View style={styles.rankBadge}>
-                  <Text variant="h4" style={{ color: getRankColor(index, theme) }}>
-                    {getRankIcon(index)}
-                  </Text>
-                </View>
-
-                <View style={styles.userInfo}>
-                  <Text variant="body" bold>
-                    {entry.username || 'Anonymous'}
-                  </Text>
-                  {entry.country_code && (
-                    <Text variant="bodySmall" color="secondary">
-                      {entry.country_code}
+                  <Text color={selectedCountry === 'all' ? 'background' : 'primary'}>Global 🌍</Text>
+                </TouchableOpacity>
+                {countries.map((country) => (
+                  <TouchableOpacity
+                    key={country.iso_code}
+                    style={[
+                      styles.countryButton,
+                      { 
+                        backgroundColor: selectedCountry === country.iso_code ? theme.colors.primary : 'transparent',
+                        borderColor: theme.colors.primary 
+                      }
+                    ]}
+                    onPress={() => setSelectedCountry(country.iso_code)}
+                  >
+                    <Text color={selectedCountry === country.iso_code ? 'background' : 'primary'}>
+                      {getFlagEmoji(country.iso_code)} {country.name}
                     </Text>
-                  )}
+                  </TouchableOpacity>
+                ))}
+              </View>
+            </ScrollView>
+          </Card>
+        )}
+
+        {/* Leaderboard List */}
+        <View style={{ gap: theme.spacing[3] }}>
+          {leaderboard.map((entry, index) => (
+            <TouchableOpacity 
+                key={`${entry.user_id}-${index}`} 
+                onPress={() => router.push(`/user/${entry.user_id}`)}
+                activeOpacity={0.7}
+            >
+              <Card padding={4} style={[
+                styles.leaderboardItem,
+                entry.user_id === 'me' && { borderColor: theme.colors.primary, borderWidth: 1 }
+              ]}>
+                {/* Rank Badge */}
+                <View style={styles.rankBadge}>
+                  <Text style={{ fontSize: 24 }}>{getRankIcon(index)}</Text>
+                </View>
+                
+                {/* User Info */}
+                <View style={styles.userInfo}>
+                   <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+                      {entry.avatar_url && (
+                        <Image 
+                          source={{ uri: entry.avatar_url }} 
+                          style={{ width: 24, height: 24, borderRadius: 12 }}
+                        />
+                      )}
+                      <Text variant="body" bold>{entry.username}</Text>
+                      <Text>{getFlagEmoji(entry.country_code)}</Text>
+                   </View>
                 </View>
 
+                {/* Score */}
                 <View style={styles.score}>
-                  <Text variant="h4" align="right">
-                    {entry.total_captures}
-                  </Text>
-                  <Text variant="caption" color="secondary" align="right">
-                    captures
-                  </Text>
+                  <Text variant="h3" color="primary">{entry.capture_count}</Text>
+                  <Text variant="caption" color="secondary">twins</Text>
                 </View>
               </Card>
-            ))}
-          </View>
-        )}
+            </TouchableOpacity>
+          ))}
+        </View>
       </ScrollView>
     </Container>
   );
+}
+
+function getFlagEmoji(countryCode: string) {
+  if (!countryCode) return '';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
 }
 
 function getRankIcon(index: number): string {
@@ -194,25 +220,31 @@ function getRankIcon(index: number): string {
   }
 }
 
-function getRankColor(index: number, theme: any): string {
-  switch (index) {
-    case 0:
-      return '#FFD700'; // Gold
-    case 1:
-      return '#C0C0C0'; // Silver
-    case 2:
-      return '#CD7F32'; // Bronze
-    default:
-      return theme.colors.border;
-  }
-}
-
 const styles = StyleSheet.create({
-  header: {
+  headerContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: 60,
+    paddingBottom: 20,
+    paddingHorizontal: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'transparent',
+  },
+  headerLeft: {
+    width: 70,
+    alignItems: 'flex-start',
+  },
+  headerCenter: {
+    flex: 1,
     alignItems: 'center',
   },
-  list: {
-    width: '100%',
+  headerRight: {
+    width: 70,
+    alignItems: 'flex-end',
+  },
+  filterButton: {
+    padding: 8,
   },
   countryButton: {
     paddingVertical: 8,
@@ -226,11 +258,12 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   rankBadge: {
-    width: 50,
+    width: 45,
     alignItems: 'center',
   },
   userInfo: {
     flex: 1,
+    marginLeft: 4,
   },
   score: {
     alignItems: 'flex-end',

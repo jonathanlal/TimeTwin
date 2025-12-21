@@ -30,7 +30,22 @@
     },
     "plugins": [
       "expo-router",
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "Capture",
+              "label": "Capture Time",
+              "minWidth": "100dp",
+              "minHeight": "100dp",
+              "description": "Capture the moment instantly",
+              "previewImage": "./assets/icon.png"
+            }
+          ]
+        }
+      ]
     ],
     "newArchEnabled": true
   }

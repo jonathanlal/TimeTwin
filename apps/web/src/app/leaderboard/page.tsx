@@ -5,8 +5,8 @@ import Link from 'next/link'
 import { useAuth } from '@/contexts/AuthContext'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Timer, Trophy, Medal, Award } from 'lucide-react'
-import { getGlobalLeaderboard, getCountryLeaderboard, getAllCountries, type LeaderboardEntry, type Country } from '@timetwin/api-sdk'
+import { Timer, Trophy, Medal, Award, User as UserIcon } from 'lucide-react'
+import { getGlobalLeaderboard, getCountryLeaderboard, getActiveCountries, type LeaderboardEntry, type Country } from '@timetwin/api-sdk'
 import { MainNav } from '@/components/MainNav'
 
 export default function LeaderboardPage() {
@@ -30,9 +30,14 @@ export default function LeaderboardPage() {
 
   const loadCountries = async () => {
     try {
-      const { data } = await getAllCountries()
+      const { data } = await getActiveCountries()
       if (data) {
-        setCountries(data)
+        // Map any DB shape to UI shape (assuming iso_code + name)
+        const mapped = data.map((c: any) => ({
+            code: c.iso_code,
+            name: c.name
+        })).sort((a: any, b: any) => a.name.localeCompare(b.name))
+        setCountries(mapped as Country[])
       }
     } catch {
       // Silently fail - countries are optional
@@ -104,7 +109,7 @@ export default function LeaderboardPage() {
                 <span className="text-sm font-medium mr-2">Filter by country:</span>
                 <Button
                   size="sm"
-                  variant={selectedCountry === 'all' ? 'default' : 'outline'}
+                  variant={selectedCountry === 'all' ? 'primary' : 'outline'}
                   onClick={() => setSelectedCountry('all')}
                 >
                   All Countries
@@ -113,7 +118,7 @@ export default function LeaderboardPage() {
                   <Button
                     key={country.code}
                     size="sm"
-                    variant={selectedCountry === country.code ? 'default' : 'outline'}
+                    variant={selectedCountry === country.code ? 'primary' : 'outline'}
                     onClick={() => setSelectedCountry(country.code)}
                   >
                     {country.name}
@@ -147,29 +152,40 @@ export default function LeaderboardPage() {
           ) : (
             <div className="space-y-3">
               {leaderboard.map((entry, index) => (
-                <Card key={entry.user_id} className={index < 3 ? 'border-2 border-primary/20' : ''}>
-                  <CardContent className="py-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-16 text-center font-bold text-lg">
-                        {getRankIcon(index) || `#${index + 1}`}
-                      </div>
-                      <div className="flex-1">
-                        <div className="font-semibold text-lg">
-                          {entry.username || 'Anonymous'}
+                <Link key={entry.user_id} href={`/user/${entry.user_id}`}>
+                  <Card className={`hover:border-primary transition-colors cursor-pointer ${index < 3 ? 'border-2 border-primary/20' : ''}`}>
+                    <CardContent className="py-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-16 text-center font-bold text-lg">
+                          {getRankIcon(index) || `#${index + 1}`}
                         </div>
-                        {entry.country_code && (
-                          <div className="text-sm text-muted-foreground">
-                            {entry.country_code}
-                          </div>
-                        )}
+                        <div className="flex-1 flex items-center gap-3">
+                           {/* Avatar */}
+                           <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
+                              {(entry as any).avatar_url ? (
+                                  <img src={(entry as any).avatar_url} alt="" className="h-full w-full object-cover"/>
+                              ) : <UserIcon className="h-5 w-5 text-muted-foreground" />} 
+                           </div>
+                           
+                           <div>
+                              <div className="font-semibold text-lg hover:text-primary transition-colors">
+                                {entry.username || 'Anonymous'}
+                              </div>
+                              {entry.country_code && (
+                                <div className="text-sm text-muted-foreground">
+                                  {entry.country_code}
+                                </div>
+                              )}
+                           </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="text-2xl font-bold">{entry.total_captures}</div>
+                          <div className="text-xs text-muted-foreground">captures</div>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <div className="text-2xl font-bold">{entry.total_captures}</div>
-                        <div className="text-xs text-muted-foreground">captures</div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </Link>
               ))}
             </div>
           )}

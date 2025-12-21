@@ -1,265 +1,194 @@
 import React, { useState, useEffect } from 'react';
-import { View, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { useRouter, useLocalSearchParams } from 'expo-router';
-import { Text, Card, Loading, Button } from '@timetwin/ui';
+import { View, ScrollView, StyleSheet, Alert, ActivityIndicator, RefreshControl, Image } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useLocalSearchParams, useRouter, Stack } from 'expo-router';
+import { Container, Text, Card, Button } from '@timetwin/ui';
 import { useTheme } from '@timetwin/theme';
-import {
-  getProfile,
-  getUserCaptureCount,
-  getUserStreak,
-  getUserCaptures,
-  type Profile,
-  type Capture,
-} from '@timetwin/api-sdk';
+import { getUserPublicProfile, sendFriendRequest, respondToFriendRequest, getPublicUserCaptures, getUserCaptureCount, type PublicProfile, type Capture } from '@timetwin/api-sdk';
+
+const PRESET_EMOJIS = {
+  excited: '🤩',
+  happy: '🙂',
+  neutral: '😐',
+  sad: '😢',
+  angry: '😠',
+  love: '😍',
+};
+
+function getFlagEmoji(countryCode?: string | null) {
+  if (!countryCode) return '';
+  const codePoints = countryCode
+    .toUpperCase()
+    .split('')
+    .map(char => 127397 + char.charCodeAt(0));
+  return String.fromCodePoint(...codePoints);
+}
 
 export default function UserProfileScreen() {
-  const router = useRouter();
-  const params = useLocalSearchParams();
-  const userId = params.id as string;
+  const { id } = useLocalSearchParams<{ id: string }>();
   const { theme } = useTheme();
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [totalCaptures, setTotalCaptures] = useState(0);
-  const [currentStreak, setCurrentStreak] = useState(0);
-  const [recentCaptures, setRecentCaptures] = useState<Capture[]>([]);
+
+  const [profile, setProfile] = useState<PublicProfile | null>(null);
+  const [captures, setCaptures] = useState<Partial<Capture>[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   useEffect(() => {
-    if (userId) {
-      loadUserProfile();
+    if (id) {
+        loadData();
     }
-  }, [userId]);
+  }, [id]);
 
-  const loadUserProfile = async () => {
+  const loadData = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-
-      const [profileResult, captureCountResult, streakResult, capturesResult] = await Promise.all([
-        getProfile(userId),
-        getUserCaptureCount(userId),
-        getUserStreak(userId),
-        getUserCaptures(userId, { limit: 5 }),
+      if (!id) return;
+      
+      const [profileRes, capturesRes, countRes] = await Promise.all([
+          getUserPublicProfile(id),
+          getPublicUserCaptures(id, 20),
+          getUserCaptureCount(id)
       ]);
 
-      if (profileResult.error || !profileResult.data) {
-        setError('User not found or profile is private');
-        return;
-      }
+      if (profileRes.data) setProfile(profileRes.data);
+      else if (profileRes.error) Alert.alert('Error', profileRes.error.message);
 
-      if (!profileResult.data.is_public) {
-        setError('This profile is private');
-        return;
-      }
+      if (capturesRes.data) setCaptures(capturesRes.data);
+      if (countRes.count !== null) setTotalCount(countRes.count);
 
-      setProfile(profileResult.data);
-
-      if (captureCountResult.count !== null) {
-        setTotalCaptures(captureCountResult.count);
-      }
-
-      if (streakResult.streak !== null) {
-        setCurrentStreak(streakResult.streak);
-      }
-
-      if (capturesResult.data) {
-        setRecentCaptures(capturesResult.data);
-      }
-    } catch {
-      setError('Failed to load user profile');
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  const handleFriendAction = async () => {
+    if (!profile) return;
+    setActionLoading(true);
+    try {
+      if (profile.friendship_status === 'none') {
+        const { success, error } = await sendFriendRequest(profile.id);
+        if (success) {
+            setProfile({ ...profile, friendship_status: 'pending_sent' });
+        } else {
+            console.error('Add friend failed:', error);
+            Alert.alert('Error', 'Could not send request: ' + (error?.message || 'Unknown error'));
+        }
+      } else if (profile.friendship_status === 'pending_received' && profile.friendship_id) {
+        // Accept
+        const { success, error } = await respondToFriendRequest(profile.friendship_id, true);
+        if (success) {
+             setProfile({ ...profile, friendship_status: 'accepted' });
+        } else {
+             Alert.alert('Error', 'Could not accept request');
+        }
+      }
+    } catch (err) {
+        console.error(err);
+        Alert.alert('Error', 'Unexpected error');
+    } finally {
+      setActionLoading(false);
+    }
   };
 
-  const styles = StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: theme.colors.background,
-    },
-    header: {
-      paddingTop: 60,
-      paddingHorizontal: theme.spacing[4],
-      paddingBottom: theme.spacing[4],
-      borderBottomWidth: 1,
-      borderBottomColor: theme.colors.border,
-      backgroundColor: theme.colors.surface,
-    },
-    content: {
-      flex: 1,
-    },
-    scrollContent: {
-      padding: theme.spacing[4],
-    },
-    profileHeader: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: theme.spacing[4],
-      marginBottom: theme.spacing[6],
-    },
-    avatar: {
-      width: 64,
-      height: 64,
-      borderRadius: 32,
-      backgroundColor: theme.colors.primaryLight,
-      justifyContent: 'center',
-      alignItems: 'center',
-    },
-    statsGrid: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-    },
-    statItem: {
-      flex: 1,
-      alignItems: 'center',
-    },
-    captureItem: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      padding: theme.spacing[3],
-      marginBottom: theme.spacing[2],
-      borderRadius: 8,
-      borderWidth: 1,
-      borderColor: theme.colors.border,
-    },
-    emptyContainer: {
-      alignItems: 'center',
-      justifyContent: 'center',
-      paddingVertical: theme.spacing[8],
-      gap: theme.spacing[2],
-    },
-  });
+  const getActionButtonConfig = () => {
+    switch (profile?.friendship_status) {
+      case 'accepted': return { label: 'Friends', disabled: true, variant: 'outline' };
+      case 'pending_sent': return { label: 'Request Sent', disabled: true, variant: 'outline' };
+      case 'pending_received': return { label: 'Accept Request', disabled: false, variant: 'primary' };
+      default: return { label: 'Add Friend', disabled: false, variant: 'primary' };
+    }
+  };
 
-  if (loading) {
-    return <Loading fullScreen text="Loading profile..." />;
-  }
+  if (loading && !profile) return <Container centered><ActivityIndicator /></Container>;
+  if (!profile && !loading) return <Container centered><Text>User not found</Text></Container>;
 
-  if (error) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()}>
-            <Text variant="body" style={{ color: theme.colors.primary }}>
-              ← Back
-            </Text>
-          </TouchableOpacity>
-        </View>
-        <View style={styles.emptyContainer}>
-          <Text style={{ fontSize: 48 }}>😕</Text>
-          <Text variant="body" style={{ color: theme.colors.textSecondary }}>
-            {error}
-          </Text>
-          <Button onPress={() => router.back()} variant="primary">Go Back</Button>
-        </View>
-      </View>
-    );
-  }
+  const btnConfig = getActionButtonConfig();
 
   return (
-    <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => router.back()}>
-          <Text variant="body" style={{ color: theme.colors.primary }}>
-            ← Back to Search
-          </Text>
-        </TouchableOpacity>
-      </View>
+    <SafeAreaView style={{ flex: 1, backgroundColor: theme.colors.background }} edges={['top']}>
+      <Stack.Screen options={{ title: profile?.username || 'User Profile', headerBackTitle: 'Back' }} />
+      <ScrollView 
+         contentContainerStyle={{ padding: 20, alignItems: 'center' }}
+         refreshControl={<RefreshControl refreshing={loading} onRefresh={loadData} />}
+      >
+        
+        {/* Avatar */}
+        <View style={{ 
+            width: 100, height: 100, borderRadius: 50, 
+            backgroundColor: theme.colors.surface, 
+            justifyContent: 'center', alignItems: 'center',
+            marginBottom: 16,
+            borderWidth: 2, borderColor: theme.colors.primary,
+            overflow: 'hidden'
+        }}>
+            {profile?.avatar_url ? (
+                <Image 
+                    source={{ uri: profile.avatar_url }} 
+                    style={{ width: '100%', height: '100%' }}
+                />
+            ) : (
+                <Text style={{ fontSize: 40 }}>👤</Text>
+            )}
+        </View>
 
-      {/* Content */}
-      <ScrollView style={styles.content} contentContainerStyle={styles.scrollContent}>
-        {/* Profile Header */}
-        <Card variant="elevated" padding={6} style={{ marginBottom: theme.spacing[4] }}>
-          <View style={styles.profileHeader}>
-            <View style={styles.avatar}>
-              <Text style={{ fontSize: 32 }}>👤</Text>
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text variant="h2">{profile?.username || 'Anonymous'}</Text>
-              <Text variant="caption" style={{ color: theme.colors.textSecondary }}>
-                {profile?.country_code && `${profile.country_code} • `}
-                {profile?.timezone}
-              </Text>
-            </View>
-          </View>
-        </Card>
+        {/* Username + Flag */}
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+            <Text variant="h1">{profile?.username}</Text>
+            <Text style={{ fontSize: 24 }}>{getFlagEmoji(profile?.country_code)}</Text>
+        </View>
+        
+        {/* Total Count */}
+        <Text variant="h3" color="secondary" style={{ marginBottom: 20 }}>
+            {totalCount} Total Captures
+        </Text>
 
-        {/* Stats Card */}
-        <Card variant="elevated" padding={6} style={{ marginBottom: theme.spacing[4] }}>
-          <Text variant="h4" style={{ marginBottom: theme.spacing[4] }}>
-            Statistics
-          </Text>
-          <View style={[styles.statsGrid, { gap: theme.spacing[4] }]}>
-            <View style={styles.statItem}>
-              <Text variant="h3" align="center">
-                {totalCaptures}
-              </Text>
-              <Text variant="caption" color="secondary" align="center">
-                Total Captures
-              </Text>
-            </View>
-            <View style={styles.statItem}>
-              <Text variant="h3" align="center" style={{ color: theme.colors.primary }}>
-                {currentStreak} 🔥
-              </Text>
-              <Text variant="caption" color="secondary" align="center">
-                Day Streak
-              </Text>
-            </View>
-          </View>
-        </Card>
+        {/* Friend Action */}
+        <Button 
+            size="lg" 
+            onPress={handleFriendAction}
+            loading={actionLoading}
+            disabled={btnConfig.disabled}
+            variant={btnConfig.variant as any}
+            style={{ width: '100%', maxWidth: 300, marginBottom: 30 }}
+        >
+            {btnConfig.label}
+        </Button>
 
-        {/* Recent Captures */}
-        <Card variant="outlined" padding={6}>
-          <Text variant="h4" style={{ marginBottom: theme.spacing[2] }}>
-            Recent Captures
-          </Text>
-          <Text
-            variant="caption"
-            style={{ color: theme.colors.textSecondary, marginBottom: theme.spacing[4] }}
-          >
-            Latest 5 time captures
-          </Text>
-
-          {recentCaptures.length === 0 ? (
-            <View style={styles.emptyContainer}>
-              <Text variant="body" style={{ color: theme.colors.textSecondary }}>
-                No recent captures
-              </Text>
-            </View>
-          ) : (
-            <View>
-              {recentCaptures.map((capture) => (
-                <View key={capture.id} style={styles.captureItem}>
-                  <View>
-                    <Text variant="body" bold>
-                      {capture.label_str}
-                    </Text>
-                    <Text variant="caption" style={{ color: theme.colors.textSecondary }}>
-                      {formatDate(capture.server_ts)}
-                    </Text>
-                  </View>
-                  <View>
-                    <Text variant="body" bold>
-                      {capture.diff_seconds}s
-                    </Text>
-                  </View>
+        {/* Recent Captures List */}
+        <View style={{ width: '100%' }}>
+            <Text variant="label" style={{ marginBottom: 12 }}>Recent Activity</Text>
+            
+            {captures.length === 0 ? (
+                <Card style={{ padding: 20, alignItems: 'center' }}>
+                    <Text color="secondary">No public records found.</Text> 
+                </Card>
+            ) : (
+                <View style={{ gap: 12 }}>
+                    {captures.map(cap => (
+                        <Card key={cap.id} style={{ padding: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                            <View>
+                                <Text variant="h3" style={{ fontFamily: 'monospace' }}>
+                                    {new Date(cap.server_ts!).getHours().toString().padStart(2,'0')}:
+                                    {new Date(cap.server_ts!).getMinutes().toString().padStart(2,'0')}
+                                </Text>
+                                <Text variant="caption" color="secondary">{new Date(cap.server_ts!).toDateString()}</Text>
+                            </View>
+                            
+                            {cap.mood && (
+                                <Text style={{ fontSize: 24 }}>
+                                    {PRESET_EMOJIS[cap.mood as keyof typeof PRESET_EMOJIS] || cap.mood}
+                                </Text>
+                            )}
+                        </Card>
+                    ))}
                 </View>
-              ))}
-            </View>
-          )}
-        </Card>
+            )}
+        </View>
+
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

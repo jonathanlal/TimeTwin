@@ -12,7 +12,7 @@ export interface RecordCaptureResponse {
   error: PostgrestError | Error | null;
 }
 
-export type CaptureMood = 'excited' | 'happy' | 'neutral' | 'thoughtful' | 'grateful' | 'hopeful';
+export type CaptureMood = 'excited' | 'happy' | 'neutral' | 'thoughtful' | 'grateful' | 'hopeful' | 'sad' | 'angry' | 'love';
 
 export interface RecordCaptureOptions {
   note?: string;
@@ -44,6 +44,24 @@ export async function recordCapture(options?: RecordCaptureOptions): Promise<Rec
       error: err instanceof Error ? err : new Error('Unknown error recording capture'),
     };
   }
+}
+
+/**
+ * Get public captures for a user (excludes notes)
+ */
+export async function getPublicUserCaptures(
+  userId: string,
+  limit: number = 20
+): Promise<{ data: Partial<Capture>[] | null; error: PostgrestError | null }> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase
+    .from('captures')
+    .select('id, server_ts, mood, twin_id, label_str, diff_seconds')
+    .eq('user_id', userId)
+    .order('server_ts', { ascending: false })
+    .limit(limit);
+
+  return { data, error };
 }
 
 /**
@@ -189,4 +207,37 @@ export async function isTwinTime(): Promise<{ open: boolean; error: PostgrestErr
   const supabase = getSupabase();
   const { data, error } = await supabase.rpc('is_twin_time');
   return { open: Boolean(data), error: error ?? null };
+}
+
+/**
+ * Update an existing capture
+ */
+export async function updateCapture(
+  captureId: string,
+  updates: { note?: string | null; mood?: CaptureMood | null; twin_id?: string | null }
+): Promise<{ data: Capture | null; error: PostgrestError | null }> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('captures')
+    .update(updates)
+    .eq('id', captureId)
+    .select();
+
+  return { data: data?.[0] || null, error };
+}
+
+/**
+ * Get a single capture by ID
+ */
+export async function getCaptureById(captureId: string): Promise<{ data: Capture | null; error: PostgrestError | null }> {
+  const supabase = getSupabase();
+
+  const { data, error } = await supabase
+    .from('captures')
+    .select('*')
+    .eq('id', captureId)
+    .single();
+
+  return { data, error };
 }

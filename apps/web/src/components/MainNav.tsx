@@ -11,7 +11,7 @@ const NAV_ITEMS = [
   { label: 'Leaderboard', href: '/leaderboard' },
   { label: 'History', href: '/history' },
   { label: 'Insights', href: '/insights' },
-  { label: 'Search', href: '/search' },
+  { label: 'Friends', href: '/friends' },
   { label: 'Profile', href: '/profile' },
 ]
 

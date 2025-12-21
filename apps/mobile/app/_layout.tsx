@@ -1,9 +1,13 @@
 import React, { useEffect } from 'react';
+import { useColorScheme } from 'react-native';
 import { Stack, useRouter } from 'expo-router';
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { ThemeProvider } from '@timetwin/theme';
 import { AuthProvider } from '../src/contexts/AuthContext';
 import { validateEnv } from '../src/config/env';
+import * as QuickActions from 'expo-quick-actions';
+import { useQuickAction } from 'expo-quick-actions/hooks';
 
 /**
  * Root layout component
@@ -11,11 +15,31 @@ import { validateEnv } from '../src/config/env';
  */
 export default function RootLayout() {
   const router = useRouter();
+  const systemColorScheme = useColorScheme();
+  const action = useQuickAction();
 
   useEffect(() => {
     // Validate environment variables on app start
     validateEnv();
+
+    // Set Quick Actions for home screen shortcuts
+    QuickActions.setItems([
+      {
+        title: 'Capture Time',
+        subtitle: 'Record a moment instanty',
+        icon: 'compose', // iOS system icon
+        id: 'capture',
+        params: { href: '/(tabs)/index?action=capture' },
+      },
+    ]);
   }, []);
+
+  // Handle Quick Action launch
+  useEffect(() => {
+    if (action?.params?.href) {
+      router.push(action.params.href as any);
+    }
+  }, [action, router]);
 
   useEffect(() => {
     const handleUrl = (url: string | null) => {
@@ -27,7 +51,7 @@ export default function RootLayout() {
         router.push({
           pathname: '/(tabs)/index',
           params: {
-            autoCapture: '1',
+            action: 'capture',
             source: String(parsed.queryParams?.source ?? 'widget'),
             trigger,
           },
@@ -41,7 +65,13 @@ export default function RootLayout() {
   }, [router]);
 
   return (
-    <ThemeProvider initialColorScheme="light">
+    <ThemeProvider 
+      storage={{ 
+        getItem: AsyncStorage.getItem, 
+        setItem: (key, value) => AsyncStorage.setItem(key, value) 
+      }}
+      systemTheme={systemColorScheme ?? 'light'}
+    >
       <AuthProvider>
         <Stack screenOptions={{ headerShown: false }}>
           <Stack.Screen name="(auth)" options={{ headerShown: false }} />

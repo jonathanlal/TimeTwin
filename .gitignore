@@ -22,3 +22,9 @@ build
 apps/**/.env*
 packages/**/.env*
 infra/**/.env*
+
+# Cleanup for public repo
+*.sql
+*.md
+!README.md
+!**/README.md

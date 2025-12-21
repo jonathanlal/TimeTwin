@@ -12,18 +12,24 @@ interface ThemeContextValue {
 
 const ThemeContext = createContext<ThemeContextValue | undefined>(undefined);
 
+export interface Storage {
+  getItem: (key: string) => Promise<string | null> | string | null;
+  setItem: (key: string, value: string) => Promise<void> | void;
+}
+
 interface ThemeProviderProps {
   children: ReactNode;
   initialColorScheme?: ColorScheme;
   storageKey?: string;
+  storage?: Storage;
+  systemTheme?: 'light' | 'dark';
 }
 
 /**
  * Get system color scheme preference
  */
 function getSystemColorScheme(): 'light' | 'dark' {
-  // For React Native, we'll need to use Appearance API
-  // For now, default to light
+  // For React Native, we'll need to use Appearance API or passed prop
   if (typeof window !== 'undefined' && window.matchMedia) {
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   }
@@ -35,55 +41,76 @@ function getSystemColorScheme(): 'light' | 'dark' {
  */
 export function ThemeProvider({
   children,
-  initialColorScheme = 'light',
+  initialColorScheme = 'auto', // Default to auto -> system
   storageKey = 'timetwin-color-scheme',
+  storage,
+  systemTheme,
 }: ThemeProviderProps) {
   const [colorScheme, setColorSchemeState] = useState<ColorScheme>(initialColorScheme);
-  const [systemScheme, setSystemScheme] = useState<'light' | 'dark'>(getSystemColorScheme());
+  
+  // Use passed systemTheme or detect
+  const [internalSystemScheme, setInternalSystemScheme] = useState<'light' | 'dark'>(() => {
+    if (systemTheme) return systemTheme;
+    return getSystemColorScheme();
+  });
 
-  // Determine active color scheme
-  const activeScheme = colorScheme === 'auto' ? systemScheme : colorScheme;
-  const theme = activeScheme === 'dark' ? darkTheme : lightTheme;
-
-  // Listen to system color scheme changes
+  // Effect to update system scheme from prop or detection
   useEffect(() => {
+    if (systemTheme) {
+      setInternalSystemScheme(systemTheme);
+      return;
+    }
+
+    // Web detection
     if (typeof window !== 'undefined' && window.matchMedia) {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setInternalSystemScheme(mediaQuery.matches ? 'dark' : 'light');
 
       const handler = (e: MediaQueryListEvent) => {
-        setSystemScheme(e.matches ? 'dark' : 'light');
+        setInternalSystemScheme(e.matches ? 'dark' : 'light');
       };
 
       mediaQuery.addEventListener('change', handler);
       return () => mediaQuery.removeEventListener('change', handler);
     }
-  }, []);
+  }, [systemTheme]);
+
+  const activeScheme = colorScheme === 'auto' ? internalSystemScheme : colorScheme;
+  const theme = activeScheme === 'dark' ? darkTheme : lightTheme;
 
   // Load color scheme from storage on mount
   useEffect(() => {
-    if (typeof window !== 'undefined') {
+    const loadStored = async () => {
       try {
-        const stored = localStorage.getItem(storageKey);
+        let stored: string | null = null;
+        if (storage) {
+          stored = await storage.getItem(storageKey);
+        } else if (typeof window !== 'undefined') {
+          stored = localStorage.getItem(storageKey);
+        }
+
         if (stored && ['light', 'dark', 'auto'].includes(stored)) {
           setColorSchemeState(stored as ColorScheme);
         }
       } catch (error) {
-        // Storage not available, use initial value
-        console.warn('Failed to load color scheme from storage:', error);
+        console.warn('Failed to load color scheme:', error);
       }
-    }
-  }, [storageKey]);
+    };
+    loadStored();
+  }, [storageKey, storage]);
 
   const setColorScheme = (scheme: ColorScheme) => {
     setColorSchemeState(scheme);
 
     // Save to storage
-    if (typeof window !== 'undefined') {
-      try {
+    try {
+      if (storage) {
+        storage.setItem(storageKey, scheme);
+      } else if (typeof window !== 'undefined') {
         localStorage.setItem(storageKey, scheme);
-      } catch (error) {
-        console.warn('Failed to save color scheme to storage:', error);
       }
+    } catch (error) {
+      console.warn('Failed to save color scheme:', error);
     }
   };
 

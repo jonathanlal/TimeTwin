@@ -7,28 +7,18 @@ export interface SignUpParams {
   username?: string;
   countryCode?: string;
   timezone?: string;
+  redirectTo?: string;
 }
 
-export interface SignInParams {
-  email: string;
-  password: string;
-}
+// ...
 
-export interface AuthResult {
-  user: User | null;
-  session: Session | null;
-  error: AuthError | null;
-}
-
-/**
- * Sign up a new user
- */
 export async function signUp({
   email,
   password,
   username,
   countryCode,
   timezone,
+  redirectTo,
 }: SignUpParams): Promise<AuthResult> {
   const supabase = getSupabase();
 
@@ -36,6 +26,7 @@ export async function signUp({
     email,
     password,
     options: {
+      emailRedirectTo: redirectTo,
       data: {
         username: username || null,
         country_code: countryCode || null,

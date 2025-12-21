@@ -48,6 +48,9 @@ export {
   getUserCaptureCount,
   getMyCaptureCount,
   isTwinTime,
+  updateCapture,
+  getCaptureById,
+  getPublicUserCaptures,
 } from './captures';
 
 export type {
@@ -66,6 +69,7 @@ export {
   getUserDailyStats,
   getMyDailyStats,
   getTodayStats,
+  getActiveCountries,
 } from './leaderboard';
 
 export type {
@@ -100,3 +104,6 @@ export type {
   AnalyticsData,
   AnalyticsResult,
 } from './analytics';
+
+// Social
+export * from './social';

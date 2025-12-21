@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { initSupabase, onAuthStateChange, getCurrentUser, signOut as apiSignOut } from '@timetwin/api-sdk';
 import type { User, Session } from '@supabase/supabase-js';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { env } from '../config/env';
 
 interface AuthContextValue {
@@ -24,7 +25,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
   useEffect(() => {
     // Initialize Supabase client
     try {
-      initSupabase(env.supabase.url, env.supabase.anonKey);
+      initSupabase(env.supabase.url, env.supabase.anonKey, {
+        storage: AsyncStorage,
+        detectSessionInUrl: false,
+      });
     } catch (error) {
       console.error('Failed to initialize Supabase:', error);
       setLoading(false);

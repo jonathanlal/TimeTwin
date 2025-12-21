@@ -16,6 +16,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [confirmPassword, setConfirmPassword] = useState('')
+  const [checkEmail, setCheckEmail] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -36,14 +37,13 @@ export default function SignupPage() {
     setLoading(true)
 
     try {
-      // Get user's timezone
       const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
       const { user, error: signUpError } = await signUp({
         email,
         password,
         username: username || undefined,
         timezone,
+        redirectTo: `${window.location.origin}/auth/callback`,
       })
 
       if (signUpError) {
@@ -53,14 +53,47 @@ export default function SignupPage() {
       }
 
       if (user) {
-        // Successfully signed up, redirect to timer
-        router.push('/timer')
+        setCheckEmail(true)
+        setLoading(false)
       }
     } catch (err) {
       console.error('Signup error:', err)
       setError('An unexpected error occurred')
       setLoading(false)
     }
+  }
+
+  if (checkEmail) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center p-4">
+        <div className="w-full max-w-md space-y-8 text-center">
+          <Link href="/" className="inline-flex items-center space-x-2 mb-6">
+            <Timer className="h-8 w-8" />
+            <span className="text-2xl font-bold">TimeTwin</span>
+          </Link>
+          <Card>
+            <CardHeader>
+              <CardTitle>Check your email</CardTitle>
+              <CardDescription>
+                We've sent a confirmation link to <strong>{email}</strong>
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Click the link in the email to sign in and start tracking your time.
+              </p>
+              <Button 
+                variant="outline" 
+                className="w-full"
+                onClick={() => router.push('/login')}
+              >
+                Return to Login
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    )
   }
 
   return (

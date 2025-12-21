@@ -29,16 +29,16 @@ import {
 import { MainNav } from '@/components/MainNav'
 
 const heroPoints: Array<{ icon: LucideIcon; label: string }> = [
-  { icon: Sparkles, label: 'Capture repeating numbers with one tap' },
+  { icon: Sparkles, label: 'Capture angel numbers with one tap' },
   { icon: CalendarClock, label: 'Syncs across iOS, Android, and web' },
   { icon: Smile, label: 'Completely free with zero ads' },
 ]
 
 const highlights: Array<{ title: string; description: string; icon: LucideIcon }> = [
   {
-    title: 'Collect the magic minute',
+    title: 'Collect every angel number',
     description:
-      'Trade screenshots for a playful journal that logs every 11:11, 22:22, and mirrored moment.',
+      'Trade screenshots for a playful journal that logs every 11:11, 22:22, and synchronicity.',
     icon: Camera,
   },
   {
@@ -108,7 +108,7 @@ const sampleMoments: Array<{ time: string; note: string; detail: string; icon: L
   },
   {
     time: '12:34',
-    note: 'Sequential vibes spotted',
+    note: 'Ladder angel number',
     detail: 'Added to pattern journal',
     icon: Infinity,
   },
@@ -153,7 +153,7 @@ export function HomePageContent() {
                   chase the streak
                 </h1>
                 <p className="max-w-lg text-lg leading-relaxed text-slate-300">
-                  TimeTwin is the fun, visual journal for collecting and celebrating repeating time moments. No
+                  TimeTwin is the fun, visual journal for collecting and celebrating angel numbers and repeating time moments. No
                   ads, no subscriptions, just simple joy at your fingertips.
                 </p>
                 <ul className="space-y-3">
@@ -305,6 +305,10 @@ export function HomePageContent() {
         </main>
 
         <footer className="border-t border-slate-800 py-8 text-center text-sm text-slate-500">
+          <div className="mb-4 flex justify-center gap-6">
+            <Link href="/privacy" className="hover:text-slate-300">Privacy Policy</Link>
+            <Link href="/terms" className="hover:text-slate-300">Terms of Service</Link>
+          </div>
           © {new Date().getFullYear()} TimeTwin. All rights reserved.
         </footer>
       </div>
