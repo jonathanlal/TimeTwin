@@ -12,10 +12,20 @@
       "distribution": "internal"
     },
     "production": {
-      "autoIncrement": true
+      "autoIncrement": true,
+      "autoSubmit": true
     }
   },
   "submit": {
-    "production": {}
+    "production": {
+      "android": {
+        "track": "internal",
+        "releaseStatus": "draft"
+      },
+      "ios": {
+        "language": "en-US",
+        "type": "production"
+      }
+    }
   }
 }

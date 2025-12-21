@@ -28,3 +28,7 @@ infra/**/.env*
 *.md
 !README.md
 !**/README.md
+
+# Expo Native Prebuilds
+apps/mobile/android/
+apps/mobile/ios/
