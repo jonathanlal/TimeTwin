@@ -3,6 +3,7 @@ import './globals.css'
 import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
+  metadataBase: new URL('https://timetwin.xyz'),
   title: 'TimeTwin - Synchronicity & Angel Numbers Tracker',
   description: 'Track 11:11, repeating angel numbers, and daily synchronicities. Compete on the global leaderboard and share your magic moments.',
   keywords: ['synchronicity', '11:11', 'angel numbers', 'numerology', 'repeating numbers', 'spiritual journal', 'time tracking'],
