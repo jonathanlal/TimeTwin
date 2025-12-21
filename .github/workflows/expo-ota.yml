@@ -17,9 +17,13 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: 'pnpm' }
       - run: pnpm install --frozen-lockfile
+      
+      - name: Setup EAS
+        run: npm install -g eas-cli
+
       - name: Publish OTA to production
         working-directory: apps/mobile
         env:
           EXPO_TOKEN: ${{ secrets.EAS_TOKEN }}
         run: |
-          npx eas update --branch production --message "ci: OTA $(git rev-parse --short HEAD)"
+          eas update --branch production --message "ci: OTA $(git rev-parse --short HEAD)"

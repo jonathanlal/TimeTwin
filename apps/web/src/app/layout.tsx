@@ -4,20 +4,20 @@ import { Providers } from '@/components/providers'
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://timetwin.xyz'),
-  title: 'TimeTwin - Synchronicity & Angel Numbers Tracker',
-  description: 'Track 11:11, repeating angel numbers, and daily synchronicities. Compete on the global leaderboard and share your magic moments.',
-  keywords: ['synchronicity', '11:11', 'angel numbers', 'numerology', 'repeating numbers', 'spiritual journal', 'time tracking'],
+  title: 'TimeTwin | Track Synchronicities',
+  description: 'Join the global community capturing 11:11 moments.',
+  keywords: ['synchronicity', '11:11', 'numerology', 'spiritual journal', 'mindfulness'],
   openGraph: {
-    title: 'TimeTwin - Catch 11:11 & Angel Numbers',
-    description: 'The fun, visual journal for collecting and celebrating your daily synchronicities.',
+    title: 'TimeTwin | Track Synchronicities',
+    description: 'Join the global community capturing 11:11 moments.',
     type: 'website',
     locale: 'en_US',
     siteName: 'TimeTwin',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'TimeTwin - Synchronicity Tracker',
-    description: 'Never miss 11:11 again. Track your streaks and join the community.',
+    title: 'TimeTwin',
+    description: 'Join the global community capturing 11:11 moments.',
   },
   appleWebApp: {
     title: 'TimeTwin',
