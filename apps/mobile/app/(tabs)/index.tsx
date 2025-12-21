@@ -218,7 +218,7 @@ export default function TimerScreen() {
             fullWidth
             style={{ minHeight: 64 }} 
           >
-            {localWindowOpen ? 'SAVE' : 'SAVE (DEV)'}
+            {localWindowOpen ? 'CAPTURE' : 'CAPTURE'}
           </Button>
         </Card>
       </View>
